@@ -47,27 +47,33 @@ mkdir ${DOWNLOAD_DIR}
 fi
 
 cd ${DOWNLOAD_DIR}
-if [ ! -f ${DOWNLOAD_DIR}/binutils-2.18.50.0.7.tar.bz2 ]; then
-wget http://www.kernel.org/pub/linux/devel/binutils/binutils-2.18.50.0.7.tar.bz2
+if [ ! -f ${DOWNLOAD_DIR}/binutils-2.19.51.0.1.tar.bz2 ]; then
+#wget http://www.kernel.org/pub/linux/devel/binutils/binutils-2.18.50.0.7.tar.bz2
+wget http://www.kernel.org/pub/linux/devel/binutils/binutils-2.19.51.0.1.tar.bz2
+#wget http://ftp.gnu.org/pub/gnu/binutils/binutils-2.19.tar.bz2
 fi
 if [ ! -f ${DOWNLOAD_DIR}/gdb-6.8.tar.bz2 ]; then
 wget http://ftp.gnu.org/pub/gnu/gdb/gdb-6.8.tar.bz2
 fi
-if [ ! -f ${DOWNLOAD_DIR}/gcc-4.3.1.tar.bz2 ]; then
-wget http://ftp.gnu.org/pub/gnu/gcc/gcc-4.3.1/gcc-4.3.1.tar.bz2
+if [ ! -f ${DOWNLOAD_DIR}/gcc-4.3.3.tar.bz2 ]; then
+wget http://ftp.gnu.org/pub/gnu/gcc/gcc-4.3.3/gcc-4.3.3.tar.bz2
 fi
-if [ ! -f ${DOWNLOAD_DIR}/gmp-4.2.2.tar.bz2 ]; then
-wget http://ftp.sunet.se/pub/gnu/gmp/gmp-4.2.2.tar.bz2
+if [ ! -f ${DOWNLOAD_DIR}/gmp-4.2.4.tar.bz2 ]; then
+#wget http://ftp.sunet.se/pub/gnu/gmp/gmp-4.2.2.tar.bz2
+wget http://ftp.gnu.org/pub/gnu/gmp/gmp-4.2.4.tar.bz2
 fi
 if [ ! -f ${DOWNLOAD_DIR}/mpfr-2.4.0.tar.bz2 ]; then
 wget http://www.mpfr.org/mpfr-current/mpfr-2.4.0.tar.bz2
 fi
+if [ ! -f ${DOWNLOAD_DIR}/newlib-1.17.0.tar.gz ]; then
+wget ftp://sources.redhat.com/pub/newlib/newlib-1.17.0.tar.gz
+fi
 
 cd ${CORTEX_TOPDIR}
 if [ ! -f .binutils ]; then
-rm -rf binutils-2.18.50.0.7
-tar xjf ${DOWNLOAD_DIR}/binutils-2.18.50.0.7.tar.bz2
-cd binutils-2.18.50.0.7
+rm -rf binutils-2.19.51.0.1
+tar xjf ${DOWNLOAD_DIR}/binutils-2.19.51.0.1.tar.bz2
+cd binutils-2.19.51.0.1
 mkdir build
 cd build
 ../configure --target=${TOOLCHAIN_TARGET} --prefix=${TOOLCHAIN_PATH} \
@@ -79,16 +85,17 @@ cd $CORTEX_TOPDIR
 touch .binutils
 fi
 
+
 export PATH=${TOOLCHAIN_PATH}/bin:$PATH
 
 cd ${CORTEX_TOPDIR}
 if [ ! -f .gcc ]; then
-rm -rf gcc-4.3.1
-tar xjf ${DOWNLOAD_DIR}/gcc-4.3.1.tar.bz2
-cd gcc-4.3.1
-tar xjf ${DOWNLOAD_DIR}/gmp-4.2.2.tar.bz2
+rm -rf gcc-4.3.3
+tar xjf ${DOWNLOAD_DIR}/gcc-4.3.3.tar.bz2
+cd gcc-4.3.3
+tar xjf ${DOWNLOAD_DIR}/gmp-4.2.4.tar.bz2
 tar xjf ${DOWNLOAD_DIR}/mpfr-2.4.0.tar.bz2
-ln -snf gmp-4.2.2 gmp
+ln -snf gmp-4.2.4 gmp
 ln -snf mpfr-2.4.0 mpfr
 cd libstdc++-v3
 # uncomment AC_LIBTOOL_DLOPEN
@@ -114,12 +121,17 @@ fi
 
 cd ${CORTEX_TOPDIR}
 if [ ! -f .newlib ]; then
-rm -rf newlib
-mkdir newlib
-cd newlib
-cvs -z 9 -d :pserver:anoncvs@sources.redhat.com:/cvs/src login
-cvs -z 9 -d :pserver:anoncvs@sources.redhat.com:/cvs/src co newlib
-cd src
+#rm -rf newlib
+#mkdir newlib
+#cd newlib
+#cvs -z 9 -d :pserver:anoncvs@sources.redhat.com:/cvs/src login
+#cvs -z 9 -d :pserver:anoncvs@sources.redhat.com:/cvs/src co newlib
+#cd src
+
+rm -rf newlib-1.17.0
+tar xfz ${DOWNLOAD_DIR}/newlib-1.17.0.tar.gz
+cd newlib-1.17.0
+
 # hack: disable libgloss for the target, presumably not buildable for armv7t
 # (this no longer seems necessary with latest newlib snapshots, commented out)
 #sed -i 's@.*noconfigdirs=\"\$noconfigdirs target-libffi target-qthreads\".*@noconfigdirs="\$noconfigdirs target-libffi target-qthreads target-libgloss\"@' \
@@ -146,7 +158,7 @@ fi
 
 cd ${CORTEX_TOPDIR}
 if [ ! -f .gcc-full ]; then
-cd gcc-4.3.1/build
+cd gcc-4.3.3/build
 #make -j3 CFLAGS="-mcpu=cortex-m3 -mthumb" all 2>&1 | tee make-full.log
 make -j3 all 2>&1 | tee make-full.log
 make install 2>&1 | tee install-full.log
