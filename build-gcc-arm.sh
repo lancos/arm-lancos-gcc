@@ -32,24 +32,25 @@ DOWNLOAD_DIR=${CORTEX_TOPDIR}/downloads
 TOOLCHAIN_PATH=${HOME}/stm32
 
 #TOOLCHAIN_TARGET=arm-elf
-#TOOLCHAIN_TARGET=arm-sidebranch-eabi
 TOOLCHAIN_TARGET=arm-lancos-eabi
 
 mkdir -p ${TOOLCHAIN_PATH}
-touch ${TOOLCHAIN_PATH}/need_write_access_here
-if [ ! ?$ -eq 0 ]; then
-  echo "Need ${TOOLCHAIN_PATH} directory with write access."
-  exit 1
+
+if touch ${TOOLCHAIN_PATH}/need_write_access_here
+  then
+	echo "Install dir: ${TOOLCHAIN_PATH}"
+	rm -f ${TOOLCHAIN_PATH}/need_write_access_here
+  else
+	echo "Need ${TOOLCHAIN_PATH} directory with write access."
+	exit 1
 fi
-rm -f ${TOOLCHAIN_PATH}/need_write_access_here
 
 if [ ! -d ${DOWNLOAD_DIR} ]; then
-mkdir ${DOWNLOAD_DIR}
+	mkdir ${DOWNLOAD_DIR}
 fi
 
 BINUTILS_VER=2.19.1
 GDB_VER=6.8
-#GCC_VER=4.3.4
 GCC_VER=4.4.1
 GMP_VER=4.3.1
 MPFR_VER=2.4.1
@@ -57,31 +58,29 @@ NEWLIB_VER=1.17.0
 INSIGHT_VER=6.8-1
 
 cd ${DOWNLOAD_DIR}
-#if [ ! -f ${DOWNLOAD_DIR}/binutils-2.19.51.0.1.tar.bz2 ]; then
-#wget http://www.kernel.org/pub/linux/devel/binutils/binutils-2.19.51.0.1.tar.bz2
-#fi
 if [ ! -f ${DOWNLOAD_DIR}/binutils-${BINUTILS_VER}.tar.bz2 ]; then
-wget http://ftp.gnu.org/pub/gnu/binutils/binutils-${BINUTILS_VER}.tar.bz2
+	wget http://ftp.gnu.org/pub/gnu/binutils/binutils-${BINUTILS_VER}.tar.bz2
 fi
 if [ ! -f ${DOWNLOAD_DIR}/gdb-${GDB_VER}.tar.bz2 ]; then
-wget http://ftp.gnu.org/pub/gnu/gdb/gdb-${GDB_VER}.tar.bz2
+	wget http://ftp.gnu.org/pub/gnu/gdb/gdb-${GDB_VER}.tar.bz2
 fi
 if [ ! -f ${DOWNLOAD_DIR}/gcc-${GCC_VER}.tar.bz2 ]; then
-wget http://ftp.gnu.org/pub/gnu/gcc/gcc-${GCC_VER}/gcc-${GCC_VER}.tar.bz2
+	wget http://ftp.gnu.org/pub/gnu/gcc/gcc-${GCC_VER}/gcc-${GCC_VER}.tar.bz2
 fi
 if [ ! -f ${DOWNLOAD_DIR}/gmp-${GMP_VER}.tar.bz2 ]; then
-wget http://ftp.gnu.org/pub/gnu/gmp/gmp-${GMP_VER}.tar.bz2
+	wget http://ftp.gnu.org/pub/gnu/gmp/gmp-${GMP_VER}.tar.bz2
 fi
 if [ ! -f ${DOWNLOAD_DIR}/mpfr-${MPFR_VER}.tar.bz2 ]; then
-wget http://www.mpfr.org/mpfr-current/mpfr-${MPFR_VER}.tar.bz2
+	wget http://www.mpfr.org/mpfr-current/mpfr-${MPFR_VER}.tar.bz2
 fi
 if [ ! -f ${DOWNLOAD_DIR}/newlib-${NEWLIB_VER}.tar.gz ]; then
-wget ftp://sources.redhat.com/pub/newlib/newlib-${NEWLIB_VER}.tar.gz
+	wget ftp://sources.redhat.com/pub/newlib/newlib-${NEWLIB_VER}.tar.gz
 fi
 if [ ! -f ${DOWNLOAD_DIR}/insight-${INSIGHT_VER}.tar.bz2 ]; then
-wget ftp://sourceware.org/pub/insight/releases/insight-${INSIGHT_VER}.tar.bz2
+	wget ftp://sourceware.org/pub/insight/releases/insight-${INSIGHT_VER}.tar.bz2
 fi
 
+#Build BINUTILS
 cd ${CORTEX_TOPDIR}
 if [ ! -f .binutils ]; then
 rm -rf binutils-${BINUTILS_VER}
@@ -102,9 +101,10 @@ cd $CORTEX_TOPDIR
 touch .binutils
 fi
 
-
+#Aggiungiamo il path del nuovo compilatore
 export PATH=${TOOLCHAIN_PATH}/bin:$PATH
 
+#Build GCC
 cd ${CORTEX_TOPDIR}
 if [ ! -f .gcc ]; then
 rm -rf gcc-${GCC_VER}
@@ -129,12 +129,10 @@ mkdir build
 cd build
 ../configure --target=${TOOLCHAIN_TARGET} --prefix=${TOOLCHAIN_PATH} \
 --with-cpu=cortex-m3 --with-mode=thumb \
---enable-interwork --enable-multilib \
+--enable-interwork --disable-multilib \
 --enable-languages="c,c++" --with-newlib --without-headers \
 --disable-shared --with-gnu-as --with-gnu-ld \
 2>&1 | tee configure.log
-
-#--disable-multilib \
 
 make -j4 all-gcc 2>&1 | tee make.log
 make install-gcc 2>&1 | tee install.log
@@ -145,6 +143,7 @@ cd ${CORTEX_TOPDIR}
 touch .gcc
 fi
 
+#Build NEWLIB
 cd ${CORTEX_TOPDIR}
 if [ ! -f .newlib ]; then
 #rm -rf newlib
@@ -158,10 +157,6 @@ rm -rf newlib-${NEWLIB_VER}
 tar xfz ${DOWNLOAD_DIR}/newlib-${NEWLIB_VER}.tar.gz
 cd newlib-${NEWLIB_VER}
 
-# hack: disable libgloss for the target, presumably not buildable for armv7t
-# (this no longer seems necessary with latest newlib snapshots, commented out)
-#sed -i 's@.*noconfigdirs=\"\$noconfigdirs target-libffi target-qthreads\".*@noconfigdirs="\$noconfigdirs target-libffi target-qthreads target-libgloss\"@' \
-#configure.ac
 # hack: allow autoconf version 2.61 instead of 2.59
 sed -i 's@\(.*_GCC_AUTOCONF_VERSION.*\)2.59\(.*\)@\12.61\2@' config/override.m4
 autoconf
@@ -173,7 +168,7 @@ cd build
 #2>&1 | tee configure.log
 
 ../configure --target=${TOOLCHAIN_TARGET} --prefix=${TOOLCHAIN_PATH} \
---enable-interwork --enable-multilib --enable-target-optspace --disable-nls --with-gnu-as --with-gnu-ld --disable-newlib-supplied-syscalls \
+--enable-interwork --disable-multilib --enable-target-optspace --disable-nls --with-gnu-as --with-gnu-ld --disable-newlib-supplied-syscalls \
 --enable-newlib-elix-level=1 --disable-newlib-io-float --disable-newlib-atexit-dynamic-alloc --enable-newlib-reent-small --disable-shared \
 --enable-newlib-multithread \
 2>&1 | tee configure.log
@@ -186,16 +181,17 @@ cd ${CORTEX_TOPDIR}
 touch .newlib
 fi
 
+#Finish to build GCC
 cd ${CORTEX_TOPDIR}
 if [ ! -f .gcc-full ]; then
 cd gcc-${GCC_VER}/build
-#make -j4 CFLAGS="-mcpu=cortex-m3 -mthumb" all 2>&1 | tee make-full.log
 make -j4 all 2>&1 | tee make-full.log
 make install 2>&1 | tee install-full.log
 cd ${CORTEX_TOPDIR}
 touch .gcc-full
 fi
 
+#Build GDB
 cd ${CORTEX_TOPDIR}
 if [ ! -f .gdb ]; then
 rm -rf gdb-${GDB_VER}
@@ -210,6 +206,7 @@ cd ${CORTEX_TOPDIR}
 touch .gdb
 fi
 
+#Build INSIGHT
 cd ${CORTEX_TOPDIR}
 if [ ! -f .insight ]; then
 rm -rf insight-${INSIGHT_VER}
@@ -223,4 +220,3 @@ make install 2>&1 | tee install.log
 cd ${CORTEX_TOPDIR}
 touch .insight
 fi
-
