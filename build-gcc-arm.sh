@@ -29,7 +29,7 @@ CORTEX_TOPDIR=`pwd`
 
 DOWNLOAD_DIR=${CORTEX_TOPDIR}/downloads
 
-TOOLCHAIN_PATH=/opt/stm32
+TOOLCHAIN_PATH=${HOME}/stm32
 
 #TOOLCHAIN_TARGET=arm-elf
 TOOLCHAIN_TARGET=arm-sidebranch-eabi
@@ -59,8 +59,8 @@ fi
 if [ ! -f ${DOWNLOAD_DIR}/gmp-4.2.2.tar.bz2 ]; then
 wget http://ftp.sunet.se/pub/gnu/gmp/gmp-4.2.2.tar.bz2
 fi
-if [ ! -f ${DOWNLOAD_DIR}/mpfr-2.3.1.tar.bz2 ]; then
-wget http://www.mpfr.org/mpfr-current/mpfr-2.3.1.tar.bz2
+if [ ! -f ${DOWNLOAD_DIR}/mpfr-2.4.0.tar.bz2 ]; then
+wget http://www.mpfr.org/mpfr-current/mpfr-2.4.0.tar.bz2
 fi
 
 cd ${CORTEX_TOPDIR}
@@ -87,9 +87,9 @@ rm -rf gcc-4.3.1
 tar xjf ${DOWNLOAD_DIR}/gcc-4.3.1.tar.bz2
 cd gcc-4.3.1
 tar xjf ${DOWNLOAD_DIR}/gmp-4.2.2.tar.bz2
-tar xjf ${DOWNLOAD_DIR}/mpfr-2.3.1.tar.bz2
+tar xjf ${DOWNLOAD_DIR}/mpfr-2.4.0.tar.bz2
 ln -snf gmp-4.2.2 gmp
-ln -snf mpfr-2.3.1 mpfr
+ln -snf mpfr-2.4.0 mpfr
 cd libstdc++-v3
 # uncomment AC_LIBTOOL_DLOPEN
 sed -i 's@^AC_LIBTOOL_DLOPEN.*@# AC_LIBTOOL_DLOPEN@' configure.ac
