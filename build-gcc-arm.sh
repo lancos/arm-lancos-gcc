@@ -1,5 +1,7 @@
 #!/bin/bash
 #
+# $Id$
+#
 # @brief Build cross compiler for ARM Cortex M3 processor
 # 
 # Builds a bare-metal cross GNU toolchain targetting the ARM Cortex M3
@@ -22,6 +24,9 @@
 # sudo apt-get install flex bison autoconf texinfo
 # and for GDB: 
 # sudo apt-get install libncurses5-dev 
+#
+# Modifiche da parte di lancos, tra cui aggiunto insight-gdb e modificato
+# opzioni della newlib, nonche` scaricamento della newlib da sito ufficiale.
 
 set -e
 
@@ -29,6 +34,7 @@ CORTEX_TOPDIR=`pwd`
 
 DOWNLOAD_DIR=${CORTEX_TOPDIR}/downloads
 
+#Dove verra` installato il toolchain
 TOOLCHAIN_PATH=${HOME}/stm32
 
 #TOOLCHAIN_TARGET=arm-elf
