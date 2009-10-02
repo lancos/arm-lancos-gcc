@@ -57,27 +57,50 @@ MPFR_VER=2.4.1
 NEWLIB_VER=1.17.0
 INSIGHT_VER=6.8-1
 
+if [ "$1" == "local" ]; then
+#Usa percorsi locali
+LOCAL_PATH=http://server.eptar.com/software/ARM/gcc-src
+echo "Download pacchetti da ${LOCAL_PATH}"
+BINUTILS_PATH=${LOCAL_PATH}
+GDB_PATH=${LOCAL_PATH}
+GCC_PATH=${LOCAL_PATH}
+GMP_PATH=${LOCAL_PATH}
+MPFR_PATH=${LOCAL_PATH}
+NEWLIB_PATH=${LOCAL_PATH}
+INSIGHT_PATH=${LOCAL_PATH}
+else
+#Usa percorsi remoti (tramite wget)
+BINUTILS_PATH=http://ftp.gnu.org/pub/gnu/binutils
+GDB_PATH=http://ftp.gnu.org/pub/gnu/gdb
+GCC_PATH=http://ftp.gnu.org/pub/gnu/gcc
+GMP_PATH=http://ftp.gnu.org/pub/gnu/gmp
+MPFR_PATH=http://www.mpfr.org/mpfr-current
+NEWLIB_PATH=ftp://sources.redhat.com/pub/newlib
+INSIGHT_PATH=ftp://sourceware.org/pub/insight/releases
+fi
+
+#Inizia download (solo se necessario)
 cd ${DOWNLOAD_DIR}
 if [ ! -f ${DOWNLOAD_DIR}/binutils-${BINUTILS_VER}.tar.bz2 ]; then
-	wget http://ftp.gnu.org/pub/gnu/binutils/binutils-${BINUTILS_VER}.tar.bz2
+	wget ${BINUTILS_PATH}/binutils-${BINUTILS_VER}.tar.bz2
 fi
 if [ ! -f ${DOWNLOAD_DIR}/gdb-${GDB_VER}.tar.bz2 ]; then
-	wget http://ftp.gnu.org/pub/gnu/gdb/gdb-${GDB_VER}.tar.bz2
+	wget ${GDB_PATH}/gdb-${GDB_VER}.tar.bz2
 fi
 if [ ! -f ${DOWNLOAD_DIR}/gcc-${GCC_VER}.tar.bz2 ]; then
-	wget http://ftp.gnu.org/pub/gnu/gcc/gcc-${GCC_VER}/gcc-${GCC_VER}.tar.bz2
+	wget ${GCC_PATH}/gcc-${GCC_VER}/gcc-${GCC_VER}.tar.bz2
 fi
 if [ ! -f ${DOWNLOAD_DIR}/gmp-${GMP_VER}.tar.bz2 ]; then
-	wget http://ftp.gnu.org/pub/gnu/gmp/gmp-${GMP_VER}.tar.bz2
+	wget ${GMP_PATH}/gmp-${GMP_VER}.tar.bz2
 fi
 if [ ! -f ${DOWNLOAD_DIR}/mpfr-${MPFR_VER}.tar.bz2 ]; then
-	wget http://www.mpfr.org/mpfr-current/mpfr-${MPFR_VER}.tar.bz2
+	wget ${MPFR_PATH}/mpfr-${MPFR_VER}.tar.bz2
 fi
 if [ ! -f ${DOWNLOAD_DIR}/newlib-${NEWLIB_VER}.tar.gz ]; then
-	wget ftp://sources.redhat.com/pub/newlib/newlib-${NEWLIB_VER}.tar.gz
+	wget ${NEWLIB_PATH}/newlib-${NEWLIB_VER}.tar.gz
 fi
 if [ ! -f ${DOWNLOAD_DIR}/insight-${INSIGHT_VER}.tar.bz2 ]; then
-	wget ftp://sourceware.org/pub/insight/releases/insight-${INSIGHT_VER}.tar.bz2
+	wget ${INSIGHT_PATH}/insight-${INSIGHT_VER}.tar.bz2
 fi
 
 #Build BINUTILS
