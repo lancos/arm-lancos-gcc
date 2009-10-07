@@ -1,6 +1,6 @@
 #!/bin/bash
 #
-# $Id: build-gcc-arm.sh,v 1.7 2009/10/02 09:32:12 claudio Exp $
+# $Id: build-gcc-arm.sh,v 1.8 2009/10/07 16:00:11 claudio Exp $
 #
 # @brief Build cross compiler for ARM Cortex M3 processor
 # 
@@ -78,7 +78,7 @@ else
 #Usa percorsi remoti (tramite wget)
 BINUTILS_PATH=http://ftp.gnu.org/pub/gnu/binutils
 GDB_PATH=http://ftp.gnu.org/pub/gnu/gdb
-GCC_PATH=http://ftp.gnu.org/pub/gnu/gcc
+GCC_PATH=http://ftp.gnu.org/pub/gnu/gcc/gcc-${GCC_VER}
 GMP_PATH=http://ftp.gnu.org/pub/gnu/gmp
 MPFR_PATH=http://www.mpfr.org/mpfr-current
 NEWLIB_PATH=ftp://sources.redhat.com/pub/newlib
@@ -94,7 +94,7 @@ if [ ! -f ${DOWNLOAD_DIR}/gdb-${GDB_VER}.tar.bz2 ]; then
 	wget ${GDB_PATH}/gdb-${GDB_VER}.tar.bz2
 fi
 if [ ! -f ${DOWNLOAD_DIR}/gcc-${GCC_VER}.tar.bz2 ]; then
-	wget ${GCC_PATH}/gcc-${GCC_VER}/gcc-${GCC_VER}.tar.bz2
+	wget ${GCC_PATH}/gcc-${GCC_VER}.tar.bz2
 fi
 if [ ! -f ${DOWNLOAD_DIR}/gmp-${GMP_VER}.tar.bz2 ]; then
 	wget ${GMP_PATH}/gmp-${GMP_VER}.tar.bz2
