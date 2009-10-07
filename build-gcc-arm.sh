@@ -1,6 +1,6 @@
 #!/bin/bash
 #
-# $Id$
+# $Id: build-gcc-arm.sh,v 1.7 2009/10/02 09:32:12 claudio Exp $
 #
 # @brief Build cross compiler for ARM Cortex M3 processor
 # 
@@ -235,17 +235,19 @@ cd ${CORTEX_TOPDIR}
 touch .gdb
 fi
 
+#N.B. Insight reinstalla anche il GDB, percio` probabilmente dovrebbero essere mutualmente esclusivi
+#     per ora manteniamo commentato INSIGHT che comunque funziona male. Preferibile a INSIGHT e` la coppia GDB + Eclipse
 #Build INSIGHT
-cd ${CORTEX_TOPDIR}
-if [ ! -f .insight ]; then
-rm -rf insight-${INSIGHT_VER}
-tar xfj ${DOWNLOAD_DIR}/insight-${INSIGHT_VER}.tar.bz2
-cd insight-${INSIGHT_VER}
-mkdir build
-cd build
-../configure --target=${TOOLCHAIN_TARGET} --prefix=${TOOLCHAIN_PATH}
-make -j4 2>&1 | tee make.log
-make install 2>&1 | tee install.log
-cd ${CORTEX_TOPDIR}
-touch .insight
-fi
+#cd ${CORTEX_TOPDIR}
+#if [ ! -f .insight ]; then
+#rm -rf insight-${INSIGHT_VER}
+#tar xfj ${DOWNLOAD_DIR}/insight-${INSIGHT_VER}.tar.bz2
+#cd insight-${INSIGHT_VER}
+#mkdir build
+#cd build
+#../configure --target=${TOOLCHAIN_TARGET} --prefix=${TOOLCHAIN_PATH}
+#make -j4 2>&1 | tee make.log
+#make install 2>&1 | tee install.log
+#cd ${CORTEX_TOPDIR}
+#touch .insight
+#fi
