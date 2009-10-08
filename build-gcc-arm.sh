@@ -1,6 +1,6 @@
 #!/bin/bash
 #
-# $Id: build-gcc-arm.sh,v 1.8 2009/10/07 16:00:11 claudio Exp $
+# $Id: build-gcc-arm.sh,v 1.9 2009/10/07 16:33:39 gianluca Exp $
 #
 # @brief Build cross compiler for ARM Cortex M3 processor
 # 
@@ -228,7 +228,7 @@ tar xjf ${DOWNLOAD_DIR}/gdb-${GDB_VER}.tar.bz2
 cd gdb-${GDB_VER}
 mkdir build
 cd build
-../configure --target=${TOOLCHAIN_TARGET} --prefix=${TOOLCHAIN_PATH}
+../configure --target=${TOOLCHAIN_TARGET} --prefix=${TOOLCHAIN_PATH} --disable-werror 
 make -j4 2>&1 | tee make.log
 make install 2>&1 | tee install.log
 cd ${CORTEX_TOPDIR}
