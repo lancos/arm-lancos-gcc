@@ -1,6 +1,6 @@
 #!/bin/bash
 #
-# $Id: build-gcc-arm.sh,v 1.10 2009/10/08 08:25:47 gianluca Exp $
+# $Id: build-gcc-arm.sh,v 1.11 2009/10/08 09:46:46 claudio Exp $
 #
 # @brief Build cross compiler for ARM Cortex M3 processor
 # 
@@ -18,7 +18,8 @@
 # @version 2008-07-12
 # @author Leon Woestenberg <leon@sidebranch.com>
 # @see http://www.sidebranch.com/
-# @note This script was tested on a Ubuntu Linux 8.04 x86 host.
+# @note This script was tested on a Ubuntu Linux 8.04 (x86 32/64bit) and
+#       Ubuntu 9.04 but with GCC 4.2.4 (newer version seems to rise some errors)
 #
 # @note You need to pre-install some Ubuntu packages on your host:
 # sudo apt-get install flex bison autoconf texinfo
@@ -272,7 +273,7 @@ tar xjf ${DOWNLOAD_DIR}/gdb-${GDB_VER}.tar.bz2
 cd gdb-${GDB_VER}
 mkdir build
 cd build
-../configure --target=${TOOLCHAIN_TARGET} --prefix=${TOOLCHAIN_PATH} --disable-werror 
+../configure --target=${TOOLCHAIN_TARGET} --prefix=${TOOLCHAIN_PATH} --enable-werror
 if [ $? -ne 0 ]; then
 	echo "GDB configure error, exit $?"
 	exit $?
