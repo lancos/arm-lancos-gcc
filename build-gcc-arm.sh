@@ -1,6 +1,6 @@
 #!/bin/bash
 #
-# $Id: build-gcc-arm.sh,v 1.9 2009/10/07 16:33:39 gianluca Exp $
+# $Id: build-gcc-arm.sh,v 1.10 2009/10/08 08:25:47 gianluca Exp $
 #
 # @brief Build cross compiler for ARM Cortex M3 processor
 # 
@@ -105,9 +105,9 @@ fi
 if [ ! -f ${DOWNLOAD_DIR}/newlib-${NEWLIB_VER}.tar.gz ]; then
 	wget ${NEWLIB_PATH}/newlib-${NEWLIB_VER}.tar.gz
 fi
-if [ ! -f ${DOWNLOAD_DIR}/insight-${INSIGHT_VER}.tar.bz2 ]; then
-	wget ${INSIGHT_PATH}/insight-${INSIGHT_VER}.tar.bz2
-fi
+#if [ ! -f ${DOWNLOAD_DIR}/insight-${INSIGHT_VER}.tar.bz2 ]; then
+#	wget ${INSIGHT_PATH}/insight-${INSIGHT_VER}.tar.bz2
+#fi
 
 #Build BINUTILS
 cd ${CORTEX_TOPDIR}
@@ -124,8 +124,20 @@ cd build
 ../configure --target=${TOOLCHAIN_TARGET} --prefix=${TOOLCHAIN_PATH} \
 --enable-interwork --disable-multilib --with-gnu-as --with-gnu-ld --disable-nls \
 2>&1 | tee configure.log
+if [ $? -ne 0 ]; then
+	echo "Binutils configure error, exit $?"
+	exit $?
+fi
 make -j4 all 2>&1 | tee make.log
+if [ $? -ne 0 ]; then
+	echo "Binutils make error, exit $?"
+	exit $?
+fi
 make install 2>&1 | tee install.log
+if [ $? -ne 0 ]; then
+	echo "Binutils install error, exit $?"
+	exit $?
+fi
 cd $CORTEX_TOPDIR
 touch .binutils
 fi
@@ -162,9 +174,21 @@ cd build
 --enable-languages="c,c++" --with-newlib --without-headers \
 --disable-shared --with-gnu-as --with-gnu-ld \
 2>&1 | tee configure.log
+if [ $? -ne 0 ]; then
+	echo "GCC(1) configure error, exit $?"
+	exit $?
+fi
 
 make -j4 all-gcc 2>&1 | tee make.log
+if [ $? -ne 0 ]; then
+	echo "GCC(1) make error, exit $?"
+	exit $?
+fi
 make install-gcc 2>&1 | tee install.log
+if [ $? -ne 0 ]; then
+	echo "GCC(1) install error, exit $?"
+	exit $?
+fi
 cd ${TOOLCHAIN_PATH}/bin
 # hack: newlib argz build needs arm-*-{eabi|elf}-cc, not arm-*-{eabi|elf}-gcc
 ln -snf ${TOOLCHAIN_TARGET}-gcc ${TOOLCHAIN_TARGET}-cc
@@ -201,11 +225,23 @@ cd build
 --enable-newlib-elix-level=1 --disable-newlib-io-float --disable-newlib-atexit-dynamic-alloc --enable-newlib-reent-small --disable-shared \
 --enable-newlib-multithread \
 2>&1 | tee configure.log
+if [ $? -ne 0 ]; then
+	echo "Newlib configure error, exit $?"
+	exit $?
+fi
 
 #make -j4 CFLAGS_FOR_TARGET="-ffunction-sections -fdata-sections -DPREFER_SIZE_OVER_SPEED -D__OPTIMIZE_SIZE__ -Os -fomit-frame-pointer -D__BUFSIZ__=256" \
 make -j4 CFLAGS_FOR_TARGET="-DREENTRANT_SYSCALLS_PROVIDED" \
 2>&1 | tee make.log
+if [ $? -ne 0 ]; then
+	echo "Newlib make error, exit $?"
+	exit $?
+fi
 make install 2>&1 | tee install.log
+if [ $? -ne 0 ]; then
+	echo "Newlib install error, exit $?"
+	exit $?
+fi
 cd ${CORTEX_TOPDIR}
 touch .newlib
 fi
@@ -215,7 +251,15 @@ cd ${CORTEX_TOPDIR}
 if [ ! -f .gcc-full ]; then
 cd gcc-${GCC_VER}/build
 make -j4 all 2>&1 | tee make-full.log
+if [ $? -ne 0 ]; then
+	echo "GCC(2) make error, exit $?"
+	exit $?
+fi
 make install 2>&1 | tee install-full.log
+if [ $? -ne 0 ]; then
+	echo "GCC(2) install error, exit $?"
+	exit $?
+fi
 cd ${CORTEX_TOPDIR}
 touch .gcc-full
 fi
@@ -229,8 +273,20 @@ cd gdb-${GDB_VER}
 mkdir build
 cd build
 ../configure --target=${TOOLCHAIN_TARGET} --prefix=${TOOLCHAIN_PATH} --disable-werror 
+if [ $? -ne 0 ]; then
+	echo "GDB configure error, exit $?"
+	exit $?
+fi
 make -j4 2>&1 | tee make.log
+if [ $? -ne 0 ]; then
+	echo "GDB make error, exit $?"
+	exit $?
+fi
 make install 2>&1 | tee install.log
+if [ $? -ne 0 ]; then
+	echo "GDB install error, exit $?"
+	exit $?
+fi
 cd ${CORTEX_TOPDIR}
 touch .gdb
 fi
