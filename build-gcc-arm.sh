@@ -1,6 +1,6 @@
 #!/bin/bash
 #
-# $Id: build-gcc-arm.sh,v 1.11 2009/10/08 09:46:46 claudio Exp $
+# $Id: build-gcc-arm.sh,v 1.12 2009/10/08 14:16:17 claudio Exp $
 #
 # @brief Build cross compiler for ARM Cortex M3 processor
 # 
@@ -29,7 +29,9 @@
 # Modifiche da parte di lancos, tra cui aggiunto insight-gdb e modificato
 # opzioni della newlib, nonche` scaricamento della newlib da sito ufficiale.
 
-set -e
+#Impostiamo i flag per uscire al primo errore (anche usando il "make | tee")
+set -o errexit
+set -o pipefail
 
 CORTEX_TOPDIR=`pwd`
 
@@ -38,8 +40,11 @@ DOWNLOAD_DIR=${CORTEX_TOPDIR}/downloads
 #Dove verra` installato il toolchain
 TOOLCHAIN_PATH=${HOME}/stm32
 
-#TOOLCHAIN_TARGET=arm-elf
+#Prefix del toolchain che stiamo costruendo
 TOOLCHAIN_TARGET=arm-lancos-eabi
+
+#Numero di compilazioni concorrenti (consigliabile 2+ per un dual-core o 4+ per un quad-core)
+NUM_JOBS=4
 
 mkdir -p ${TOOLCHAIN_PATH}
 
@@ -65,25 +70,25 @@ NEWLIB_VER=1.17.0
 INSIGHT_VER=6.8-1
 
 if [ "$1" == "local" ]; then
-#Usa percorsi locali
-LOCAL_PATH=http://server.eptar.com/software/ARM/gcc-src
-echo "Download pacchetti da ${LOCAL_PATH}"
-BINUTILS_PATH=${LOCAL_PATH}
-GDB_PATH=${LOCAL_PATH}
-GCC_PATH=${LOCAL_PATH}
-GMP_PATH=${LOCAL_PATH}
-MPFR_PATH=${LOCAL_PATH}
-NEWLIB_PATH=${LOCAL_PATH}
-INSIGHT_PATH=${LOCAL_PATH}
+	#Usa percorsi locali
+	LOCAL_PATH=http://server.eptar.com/software/ARM/gcc-src
+	echo "Download pacchetti da ${LOCAL_PATH}"
+	BINUTILS_PATH=${LOCAL_PATH}
+	GDB_PATH=${LOCAL_PATH}
+	GCC_PATH=${LOCAL_PATH}
+	GMP_PATH=${LOCAL_PATH}
+	MPFR_PATH=${LOCAL_PATH}
+	NEWLIB_PATH=${LOCAL_PATH}
+	INSIGHT_PATH=${LOCAL_PATH}
 else
-#Usa percorsi remoti (tramite wget)
-BINUTILS_PATH=http://ftp.gnu.org/pub/gnu/binutils
-GDB_PATH=http://ftp.gnu.org/pub/gnu/gdb
-GCC_PATH=http://ftp.gnu.org/pub/gnu/gcc/gcc-${GCC_VER}
-GMP_PATH=http://ftp.gnu.org/pub/gnu/gmp
-MPFR_PATH=http://www.mpfr.org/mpfr-current
-NEWLIB_PATH=ftp://sources.redhat.com/pub/newlib
-INSIGHT_PATH=ftp://sourceware.org/pub/insight/releases
+	#Usa percorsi remoti (tramite wget)
+	BINUTILS_PATH=http://ftp.gnu.org/pub/gnu/binutils
+	GDB_PATH=http://ftp.gnu.org/pub/gnu/gdb
+	GCC_PATH=http://ftp.gnu.org/pub/gnu/gcc/gcc-${GCC_VER}
+	GMP_PATH=http://ftp.gnu.org/pub/gnu/gmp
+	MPFR_PATH=http://www.mpfr.org/mpfr-current
+	NEWLIB_PATH=ftp://sources.redhat.com/pub/newlib
+	INSIGHT_PATH=ftp://sourceware.org/pub/insight/releases
 fi
 
 #Inizia download (solo se necessario)
@@ -110,186 +115,123 @@ fi
 #	wget ${INSIGHT_PATH}/insight-${INSIGHT_VER}.tar.bz2
 #fi
 
-#Build BINUTILS
+echo "Build BINUTILS"
 cd ${CORTEX_TOPDIR}
 if [ ! -f .binutils ]; then
-rm -rf binutils-${BINUTILS_VER}
-tar xjf ${DOWNLOAD_DIR}/binutils-${BINUTILS_VER}.tar.bz2
-cd binutils-${BINUTILS_VER}
+	rm -rf binutils-${BINUTILS_VER}
+	tar xjf ${DOWNLOAD_DIR}/binutils-${BINUTILS_VER}.tar.bz2
+	cd binutils-${BINUTILS_VER}
 
-# hack: allow autoconf version 2.61 instead of 2.59
-sed -i 's@\(.*_GCC_AUTOCONF_VERSION.*\)2.59\(.*\)@\12.61\2@' config/override.m4
-autoconf
-mkdir build
-cd build
-../configure --target=${TOOLCHAIN_TARGET} --prefix=${TOOLCHAIN_PATH} \
---enable-interwork --disable-multilib --with-gnu-as --with-gnu-ld --disable-nls \
-2>&1 | tee configure.log
-if [ $? -ne 0 ]; then
-	echo "Binutils configure error, exit $?"
-	exit $?
-fi
-make -j4 all 2>&1 | tee make.log
-if [ $? -ne 0 ]; then
-	echo "Binutils make error, exit $?"
-	exit $?
-fi
-make install 2>&1 | tee install.log
-if [ $? -ne 0 ]; then
-	echo "Binutils install error, exit $?"
-	exit $?
-fi
-cd $CORTEX_TOPDIR
-touch .binutils
+	# hack: allow autoconf version 2.61 instead of 2.59
+	sed -i 's@\(.*_GCC_AUTOCONF_VERSION.*\)2.59\(.*\)@\12.61\2@' config/override.m4
+	autoconf
+	mkdir build
+	cd build
+	../configure --target=${TOOLCHAIN_TARGET} --prefix=${TOOLCHAIN_PATH} \
+	--enable-interwork --disable-multilib --with-gnu-as --with-gnu-ld --disable-nls \
+	2>&1 | tee configure.log
+
+	make -j${NUM_JOBS} all 2>&1 | tee make.log
+	make install 2>&1 | tee install.log
+	cd $CORTEX_TOPDIR
+	touch .binutils
 fi
 
 #Aggiungiamo il path del nuovo compilatore
 export PATH=${TOOLCHAIN_PATH}/bin:$PATH
 
-#Build GCC
+echo "Build GCC (first half)"
 cd ${CORTEX_TOPDIR}
 if [ ! -f .gcc ]; then
-rm -rf gcc-${GCC_VER}
-tar xjf ${DOWNLOAD_DIR}/gcc-${GCC_VER}.tar.bz2
-cd gcc-${GCC_VER}
-tar xjf ${DOWNLOAD_DIR}/gmp-${GMP_VER}.tar.bz2
-tar xjf ${DOWNLOAD_DIR}/mpfr-${MPFR_VER}.tar.bz2
-ln -snf gmp-${GMP_VER} gmp
-ln -snf mpfr-${MPFR_VER} mpfr
+	rm -rf gcc-${GCC_VER}
+	tar xjf ${DOWNLOAD_DIR}/gcc-${GCC_VER}.tar.bz2
+	cd gcc-${GCC_VER}
+	tar xjf ${DOWNLOAD_DIR}/gmp-${GMP_VER}.tar.bz2
+	tar xjf ${DOWNLOAD_DIR}/mpfr-${MPFR_VER}.tar.bz2
+	ln -snf gmp-${GMP_VER} gmp
+	ln -snf mpfr-${MPFR_VER} mpfr
 
-#cd libstdc++-v3
-## uncomment AC_LIBTOOL_DLOPEN
-#sed -i 's@^AC_LIBTOOL_DLOPEN.*@# AC_LIBTOOL_DLOPEN@' configure.ac
-#autoconf
-#cd ..
+	#cd libstdc++-v3
+	## uncomment AC_LIBTOOL_DLOPEN
+	#sed -i 's@^AC_LIBTOOL_DLOPEN.*@# AC_LIBTOOL_DLOPEN@' configure.ac
+	#autoconf
+	#cd ..
 
-# hack: allow autoconf version 2.61 instead of 2.59
-sed -i 's@\(.*_GCC_AUTOCONF_VERSION.*\)2.59\(.*\)@\12.61\2@' config/override.m4
-autoconf
+	# hack: allow autoconf version 2.61 instead of 2.59
+	sed -i 's@\(.*_GCC_AUTOCONF_VERSION.*\)2.59\(.*\)@\12.61\2@' config/override.m4
+	autoconf
 
-mkdir build
-cd build
-../configure --target=${TOOLCHAIN_TARGET} --prefix=${TOOLCHAIN_PATH} \
---with-cpu=cortex-m3 --with-mode=thumb \
---enable-interwork --disable-multilib \
---enable-languages="c,c++" --with-newlib --without-headers \
---disable-shared --with-gnu-as --with-gnu-ld \
-2>&1 | tee configure.log
-if [ $? -ne 0 ]; then
-	echo "GCC(1) configure error, exit $?"
-	exit $?
+	mkdir build
+	cd build
+	../configure --target=${TOOLCHAIN_TARGET} --prefix=${TOOLCHAIN_PATH} \
+	--with-cpu=cortex-m3 --with-mode=thumb --enable-interwork --disable-multilib \
+	--enable-languages="c,c++" --with-newlib --without-headers \
+	--disable-shared --with-gnu-as --with-gnu-ld \
+	2>&1 | tee configure.log
+
+	make -j${NUM_JOBS} all-gcc 2>&1 | tee make.log
+	make install-gcc 2>&1 | tee install.log
+	cd ${TOOLCHAIN_PATH}/bin
+	# hack: newlib argz build needs arm-*-{eabi|elf}-cc, not arm-*-{eabi|elf}-gcc
+	ln -snf ${TOOLCHAIN_TARGET}-gcc ${TOOLCHAIN_TARGET}-cc
+	cd ${CORTEX_TOPDIR}
+	touch .gcc
 fi
 
-make -j4 all-gcc 2>&1 | tee make.log
-if [ $? -ne 0 ]; then
-	echo "GCC(1) make error, exit $?"
-	exit $?
-fi
-make install-gcc 2>&1 | tee install.log
-if [ $? -ne 0 ]; then
-	echo "GCC(1) install error, exit $?"
-	exit $?
-fi
-cd ${TOOLCHAIN_PATH}/bin
-# hack: newlib argz build needs arm-*-{eabi|elf}-cc, not arm-*-{eabi|elf}-gcc
-ln -snf ${TOOLCHAIN_TARGET}-gcc ${TOOLCHAIN_TARGET}-cc
-cd ${CORTEX_TOPDIR}
-touch .gcc
-fi
-
-#Build NEWLIB
+echo "Build NEWLIB"
 cd ${CORTEX_TOPDIR}
 if [ ! -f .newlib ]; then
-#rm -rf newlib
-#mkdir newlib
-#cd newlib
-#cvs -z 9 -d :pserver:anoncvs@sources.redhat.com:/cvs/src login
-#cvs -z 9 -d :pserver:anoncvs@sources.redhat.com:/cvs/src co newlib
-#cd src
+	#rm -rf newlib
+	#mkdir newlib
+	#cd newlib
+	#cvs -z 9 -d :pserver:anoncvs@sources.redhat.com:/cvs/src login
+	#cvs -z 9 -d :pserver:anoncvs@sources.redhat.com:/cvs/src co newlib
+	#cd src
 
-rm -rf newlib-${NEWLIB_VER}
-tar xfz ${DOWNLOAD_DIR}/newlib-${NEWLIB_VER}.tar.gz
-cd newlib-${NEWLIB_VER}
+	rm -rf newlib-${NEWLIB_VER}
+	tar xfz ${DOWNLOAD_DIR}/newlib-${NEWLIB_VER}.tar.gz
+	cd newlib-${NEWLIB_VER}
 
-# hack: allow autoconf version 2.61 instead of 2.59
-sed -i 's@\(.*_GCC_AUTOCONF_VERSION.*\)2.59\(.*\)@\12.61\2@' config/override.m4
-autoconf
-mkdir build
-cd build
-# note: this needs arm-*-{eabi|elf}-cc to exist or link to arm-*-{eabi|elf}-gcc
-#../configure --target=${TOOLCHAIN_TARGET} --prefix=${TOOLCHAIN_PATH} \
-#--enable-interwork --disable-newlib-supplied-syscalls --with-gnu-ld --with-gnu-as --disable-shared \
-#2>&1 | tee configure.log
-
-../configure --target=${TOOLCHAIN_TARGET} --prefix=${TOOLCHAIN_PATH} \
---enable-interwork --disable-multilib --enable-target-optspace --disable-nls --with-gnu-as --with-gnu-ld --disable-newlib-supplied-syscalls \
---enable-newlib-elix-level=1 --disable-newlib-io-float --disable-newlib-atexit-dynamic-alloc --enable-newlib-reent-small --disable-shared \
---enable-newlib-multithread \
-2>&1 | tee configure.log
-if [ $? -ne 0 ]; then
-	echo "Newlib configure error, exit $?"
-	exit $?
+	# hack: allow autoconf version 2.61 instead of 2.59
+	sed -i 's@\(.*_GCC_AUTOCONF_VERSION.*\)2.59\(.*\)@\12.61\2@' config/override.m4
+	autoconf
+	mkdir build
+	cd build
+	#note: this needs arm-*-{eabi|elf}-cc to exist or link to arm-*-{eabi|elf}-gcc
+	../configure --target=${TOOLCHAIN_TARGET} --prefix=${TOOLCHAIN_PATH} \
+	--enable-interwork --disable-multilib --enable-target-optspace --disable-nls --with-gnu-as --with-gnu-ld --disable-newlib-supplied-syscalls \
+	--enable-newlib-elix-level=1 --disable-newlib-io-float --disable-newlib-atexit-dynamic-alloc --enable-newlib-reent-small --disable-shared \
+	--enable-newlib-multithread \
+	2>&1 | tee configure.log
+	make -j${NUM_JOBS} CFLAGS_FOR_TARGET="-DREENTRANT_SYSCALLS_PROVIDED" 2>&1 | tee make.log
+	make install 2>&1 | tee install.log
+	cd ${CORTEX_TOPDIR}
+	touch .newlib
 fi
 
-#make -j4 CFLAGS_FOR_TARGET="-ffunction-sections -fdata-sections -DPREFER_SIZE_OVER_SPEED -D__OPTIMIZE_SIZE__ -Os -fomit-frame-pointer -D__BUFSIZ__=256" \
-make -j4 CFLAGS_FOR_TARGET="-DREENTRANT_SYSCALLS_PROVIDED" \
-2>&1 | tee make.log
-if [ $? -ne 0 ]; then
-	echo "Newlib make error, exit $?"
-	exit $?
-fi
-make install 2>&1 | tee install.log
-if [ $? -ne 0 ]; then
-	echo "Newlib install error, exit $?"
-	exit $?
-fi
-cd ${CORTEX_TOPDIR}
-touch .newlib
-fi
-
-#Finish to build GCC
+echo "Build GCC (second half)"
 cd ${CORTEX_TOPDIR}
 if [ ! -f .gcc-full ]; then
-cd gcc-${GCC_VER}/build
-make -j4 all 2>&1 | tee make-full.log
-if [ $? -ne 0 ]; then
-	echo "GCC(2) make error, exit $?"
-	exit $?
-fi
-make install 2>&1 | tee install-full.log
-if [ $? -ne 0 ]; then
-	echo "GCC(2) install error, exit $?"
-	exit $?
-fi
-cd ${CORTEX_TOPDIR}
-touch .gcc-full
+	cd gcc-${GCC_VER}/build
+	make -j${NUM_JOBS} all 2>&1 | tee make-full.log
+	make install 2>&1 | tee install-full.log
+	cd ${CORTEX_TOPDIR}
+	touch .gcc-full
 fi
 
-#Build GDB
+echo "Build GDB"
 cd ${CORTEX_TOPDIR}
 if [ ! -f .gdb ]; then
-rm -rf gdb-${GDB_VER}
-tar xjf ${DOWNLOAD_DIR}/gdb-${GDB_VER}.tar.bz2
-cd gdb-${GDB_VER}
-mkdir build
-cd build
-../configure --target=${TOOLCHAIN_TARGET} --prefix=${TOOLCHAIN_PATH} --enable-werror
-if [ $? -ne 0 ]; then
-	echo "GDB configure error, exit $?"
-	exit $?
-fi
-make -j4 2>&1 | tee make.log
-if [ $? -ne 0 ]; then
-	echo "GDB make error, exit $?"
-	exit $?
-fi
-make install 2>&1 | tee install.log
-if [ $? -ne 0 ]; then
-	echo "GDB install error, exit $?"
-	exit $?
-fi
-cd ${CORTEX_TOPDIR}
-touch .gdb
+	rm -rf gdb-${GDB_VER}
+	tar xjf ${DOWNLOAD_DIR}/gdb-${GDB_VER}.tar.bz2
+	cd gdb-${GDB_VER}
+	mkdir build
+	cd build
+	../configure --target=${TOOLCHAIN_TARGET} --prefix=${TOOLCHAIN_PATH} --enable-werror
+	make -j${NUM_JOBS} 2>&1 | tee make.log
+	make install 2>&1 | tee install.log
+	cd ${CORTEX_TOPDIR}
+	touch .gdb
 fi
 
 #N.B. Insight reinstalla anche il GDB, percio` probabilmente dovrebbero essere mutualmente esclusivi
@@ -297,14 +239,17 @@ fi
 #Build INSIGHT
 #cd ${CORTEX_TOPDIR}
 #if [ ! -f .insight ]; then
-#rm -rf insight-${INSIGHT_VER}
-#tar xfj ${DOWNLOAD_DIR}/insight-${INSIGHT_VER}.tar.bz2
-#cd insight-${INSIGHT_VER}
-#mkdir build
-#cd build
-#../configure --target=${TOOLCHAIN_TARGET} --prefix=${TOOLCHAIN_PATH}
-#make -j4 2>&1 | tee make.log
-#make install 2>&1 | tee install.log
-#cd ${CORTEX_TOPDIR}
-#touch .insight
+#	rm -rf insight-${INSIGHT_VER}
+#	tar xfj ${DOWNLOAD_DIR}/insight-${INSIGHT_VER}.tar.bz2
+#	cd insight-${INSIGHT_VER}
+#	mkdir build
+#	cd build
+#	../configure --target=${TOOLCHAIN_TARGET} --prefix=${TOOLCHAIN_PATH}
+#	make -j${NUM_JOBS} 2>&1 | tee make.log
+#	make install 2>&1 | tee install.log
+#	cd ${CORTEX_TOPDIR}
+#	touch .insight
 #fi
+
+echo "Done"
+
