@@ -1,6 +1,6 @@
 #!/bin/bash
 #
-# $Id: build-gcc-arm.sh,v 1.12 2009/10/08 14:16:17 claudio Exp $
+# $Id: build-gcc-arm.sh,v 1.13 2009/10/08 15:32:06 claudio Exp $
 #
 # @brief Build cross compiler for ARM Cortex M3 processor
 # 
@@ -13,13 +13,14 @@
 # use 'anoncvs'.
 #
 # @note This script overrides newlib's autoconf 2.59 version dependency
-# to 2.61.
+# to 2.61. Su ubuntu 9.04 autoconf e` alla versione 2.63.
 #
 # @version 2008-07-12
 # @author Leon Woestenberg <leon@sidebranch.com>
 # @see http://www.sidebranch.com/
 # @note This script was tested on a Ubuntu Linux 8.04 (x86 32/64bit) and
 #       Ubuntu 9.04 but with GCC 4.2.4 (newer version seems to rise some errors)
+#       This script was tested also on a Fedora core 10 x86 32bit
 #
 # @note You need to pre-install some Ubuntu packages on your host:
 # sudo apt-get install flex bison autoconf texinfo
@@ -34,6 +35,11 @@ set -o errexit
 set -o pipefail
 
 CORTEX_TOPDIR=`pwd`
+
+#Per ubuntu 8.04 e 9.04 va bene il gcc-4.2, per altre distro (FC10) utilizzare il gcc standard
+#export CC=gcc
+export CC=gcc-4.2
+echo "gcc utilizzato: $CC"
 
 DOWNLOAD_DIR=${CORTEX_TOPDIR}/downloads
 
