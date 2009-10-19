@@ -1,0 +1,34 @@
+Index: build-gcc-arm.sh
+===================================================================
+RCS file: /home/cvsroot/stm32-cortex-gcc/build-gcc-arm.sh,v
+retrieving revision 1.14
+diff -u -r1.14 build-gcc-arm.sh
+--- build-gcc-arm.sh	19 Oct 2009 09:20:29 -0000	1.14
++++ build-gcc-arm.sh	19 Oct 2009 09:23:09 -0000
+@@ -129,7 +129,7 @@
+ 	cd binutils-${BINUTILS_VER}
+ 
+ 	# hack: allow autoconf version 2.61 instead of 2.59
+-	sed -i 's@\(.*_GCC_AUTOCONF_VERSION.*\)2.59\(.*\)@\12.61\2@' config/override.m4
++	sed -i 's@\(.*_GCC_AUTOCONF_VERSION.*\)2.59\(.*\)@\12.63\2@' config/override.m4
+ 	autoconf
+ 	mkdir build
+ 	cd build
+@@ -164,7 +164,7 @@
+ 	#cd ..
+ 
+ 	# hack: allow autoconf version 2.61 instead of 2.59
+-	sed -i 's@\(.*_GCC_AUTOCONF_VERSION.*\)2.59\(.*\)@\12.61\2@' config/override.m4
++	sed -i 's@\(.*_GCC_AUTOCONF_VERSION.*\)2.59\(.*\)@\12.63\2@' config/override.m4
+ 	autoconf
+ 
+ 	mkdir build
+@@ -199,7 +199,7 @@
+ 	cd newlib-${NEWLIB_VER}
+ 
+ 	# hack: allow autoconf version 2.61 instead of 2.59
+-	sed -i 's@\(.*_GCC_AUTOCONF_VERSION.*\)2.59\(.*\)@\12.61\2@' config/override.m4
++	sed -i 's@\(.*_GCC_AUTOCONF_VERSION.*\)2.59\(.*\)@\12.63\2@' config/override.m4
+ 	autoconf
+ 	mkdir build
+ 	cd build
