@@ -1,6 +1,6 @@
 #!/bin/bash
 #
-# $Id: build-gcc-arm.sh,v 1.14 2009/10/19 09:20:29 claudio Exp $
+# $Id: build-gcc-arm.sh,v 1.15 2009/11/06 10:51:38 claudio Exp $
 #
 # @brief Build cross compiler for ARM Cortex M3 processor
 # 
@@ -51,6 +51,12 @@ MPFR_VER=2.4.1
 NEWLIB_VER=1.17.0
 #INSIGHT_VER=6.8-1
 
+#Snapshots releases
+#BINUTILS_VER=2.20.51
+#GDB_VER=6.8.50.20090916
+#GCC_VER=4.5-20091029
+#INSIGHT_VER=weekly-7.0.50-20091102
+
 TOOLCHAIN_NAME=gcc${GCC_VER}-bu${BINUTILS_VER}-gdb${GDB_VER}-nl${NEWLIB_VER}
 echo "Build toolchain $TOOLCHAIN_NAME"
 
@@ -92,12 +98,26 @@ if [ "$1" == "local" ]; then
 else
 	#Usa percorsi remoti (tramite wget)
 	BINUTILS_PATH=http://ftp.gnu.org/pub/gnu/binutils
+	#BINUTILS_PATH=ftp://sourceware.org/pub/binutils/releases
+
 	GDB_PATH=http://ftp.gnu.org/pub/gnu/gdb
+	#GDB_PATH=ftp://sourceware.org/pub/gdb/releases
+
 	GCC_PATH=http://ftp.gnu.org/pub/gnu/gcc/gcc-${GCC_VER}
+	#GCC_PATH=ftp://sourceware.org/pub/gcc/releases/gcc-${GCC_VER}
+
+	NEWLIB_PATH=ftp://sources.redhat.com/pub/newlib
+	#NEWLIB_PATH=ftp://sourceware.org/pub/newlib
+
 	GMP_PATH=http://ftp.gnu.org/pub/gnu/gmp
 	MPFR_PATH=http://www.mpfr.org/mpfr-current
-	NEWLIB_PATH=ftp://sources.redhat.com/pub/newlib
 	INSIGHT_PATH=ftp://sourceware.org/pub/insight/releases
+
+	#Snapshots path
+	#BINUTILS_PATH=ftp://sourceware.org/pub/binutils/snapshots
+	#GDB_PATH=ftp://sourceware.org/pub/gdb/snapshots/current              
+	#GCC_PATH=ftp://sourceware.org/pub/gcc/snapshots/${GCC_VER}
+	#INSIGHT_PATH=ftp://sourceware.org/pub/insight/snapshots/current
 fi
 
 #Inizia download (solo se necessario)
