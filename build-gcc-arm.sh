@@ -1,6 +1,6 @@
 #!/bin/bash
 #
-# $Id: build-gcc-arm.sh,v 1.13 2009/10/08 15:32:06 claudio Exp $
+# $Id: build-gcc-arm.sh,v 1.14 2009/10/19 09:20:29 claudio Exp $
 #
 # @brief Build cross compiler for ARM Cortex M3 processor
 # 
@@ -36,15 +36,26 @@ set -o pipefail
 
 CORTEX_TOPDIR=`pwd`
 
-#Per ubuntu 8.04 e 9.04 va bene il gcc-4.2, per altre distro (FC10) utilizzare il gcc standard
+#Per ubuntu 8.04, 8.10 e 9.04 va bene il gcc-4.2, per altre distro (FC10) utilizzare il gcc standard
 #export CC=gcc
 export CC=gcc-4.2
 echo "gcc utilizzato: $CC"
 
 DOWNLOAD_DIR=${CORTEX_TOPDIR}/downloads
 
+BINUTILS_VER=2.19.1
+GDB_VER=7.0
+GCC_VER=4.4.2
+GMP_VER=4.3.1
+MPFR_VER=2.4.1
+NEWLIB_VER=1.17.0
+#INSIGHT_VER=6.8-1
+
+TOOLCHAIN_NAME=gcc${GCC_VER}-bu${BINUTILS_VER}-gdb${GDB_VER}-nl${NEWLIB_VER}
+echo "Build toolchain $TOOLCHAIN_NAME"
+
 #Dove verra` installato il toolchain
-TOOLCHAIN_PATH=${HOME}/stm32
+TOOLCHAIN_PATH=${HOME}/${TOOLCHAIN_NAME}
 
 #Prefix del toolchain che stiamo costruendo
 TOOLCHAIN_TARGET=arm-lancos-eabi
@@ -66,14 +77,6 @@ fi
 if [ ! -d ${DOWNLOAD_DIR} ]; then
 	mkdir ${DOWNLOAD_DIR}
 fi
-
-BINUTILS_VER=2.19.1
-GDB_VER=6.8
-GCC_VER=4.4.1
-GMP_VER=4.3.1
-MPFR_VER=2.4.1
-NEWLIB_VER=1.17.0
-INSIGHT_VER=6.8-1
 
 if [ "$1" == "local" ]; then
 	#Usa percorsi locali
@@ -257,5 +260,7 @@ fi
 #	touch .insight
 #fi
 
+echo "Done. Build TAR GZ package..."
+cd ${TOOLCHAIN_PATH}/..
+tar cfj ${TOOLCHAIN_NAME}.tar.bz2 ${TOOLCHAIN_NAME}
 echo "Done"
-
