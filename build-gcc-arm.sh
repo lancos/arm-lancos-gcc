@@ -1,34 +1,32 @@
 #!/bin/bash
 #
-# $Id: build-gcc-arm.sh,v 1.15 2009/11/06 10:51:38 claudio Exp $
+# $Id: build-gcc-arm.sh,v 1.16 2009/11/06 23:55:51 claudio Exp $
 #
 # @brief Build cross compiler for ARM Cortex M3 processor
 # 
 # Builds a bare-metal cross GNU toolchain targetting the ARM Cortex M3
 # microprocessor in EABI mode and using the newlib embedded C library.
 #
-# @note The newlib C library is checked out from CVS, so for a
-# deterministic build you must fix this. I tested toolchains around
-# July 12th 2008. Also, it means the cvs checkout asks for a password;
-# use 'anoncvs'.
-#
-# @note This script overrides newlib's autoconf 2.59 version dependency
-# to 2.61. Su ubuntu 9.04 autoconf e` alla versione 2.63.
-#
-# @version 2008-07-12
-# @author Leon Woestenberg <leon@sidebranch.com>
-# @see http://www.sidebranch.com/
+# @version $Version$
+# @author  Claudio Lanconelli
 # @note This script was tested on a Ubuntu Linux 8.04 (x86 32/64bit) and
 #       Ubuntu 9.04 but with GCC 4.2.4 (newer version seems to rise some errors)
 #       This script was tested also on a Fedora core 10 x86 32bit
+#
+# @note Based on Leon Woestenberg <leon@sidebranch.com> http://www.sidebranch.com/
 #
 # @note You need to pre-install some Ubuntu packages on your host:
 # sudo apt-get install flex bison autoconf texinfo
 # and for GDB: 
 # sudo apt-get install libncurses5-dev 
 #
-# Modifiche da parte di lancos, tra cui aggiunto insight-gdb e modificato
-# opzioni della newlib, nonche` scaricamento della newlib da sito ufficiale.
+# @note Richiede autoconf 2.64
+#
+# @note This script overrides gcc's autoconf 2.59 version dependency
+# to 2.64.
+#
+# @note aggiunto insight-gdb e modificato opzioni della newlib, nonche`
+# scaricamento della newlib da sito ufficiale.
 
 #Impostiamo i flag per uscire al primo errore (anche usando il "make | tee")
 set -o errexit
@@ -43,12 +41,12 @@ echo "gcc utilizzato: $CC"
 
 DOWNLOAD_DIR=${CORTEX_TOPDIR}/downloads
 
-BINUTILS_VER=2.19.1
-GDB_VER=7.0
+BINUTILS_VER=2.20
+GDB_VER=7.0.1
 GCC_VER=4.4.2
-GMP_VER=4.3.1
-MPFR_VER=2.4.1
-NEWLIB_VER=1.17.0
+GMP_VER=4.3.2
+MPFR_VER=2.4.2
+NEWLIB_VER=1.18.0
 #INSIGHT_VER=6.8-1
 
 #Snapshots releases
@@ -149,10 +147,11 @@ cd ${CORTEX_TOPDIR}
 if [ ! -f .binutils ]; then
 	rm -rf binutils-${BINUTILS_VER}
 	tar xjf ${DOWNLOAD_DIR}/binutils-${BINUTILS_VER}.tar.bz2
+	patch -p0 <binutils.patch
 	cd binutils-${BINUTILS_VER}
 
 	# hack: allow autoconf version 2.61 instead of 2.59
-	sed -i 's@\(.*_GCC_AUTOCONF_VERSION.*\)2.59\(.*\)@\12.61\2@' config/override.m4
+	#sed -i 's@\(.*_GCC_AUTOCONF_VERSION.*\)2.59\(.*\)@\12.61\2@' config/override.m4
 	autoconf
 	mkdir build
 	cd build
@@ -174,6 +173,7 @@ cd ${CORTEX_TOPDIR}
 if [ ! -f .gcc ]; then
 	rm -rf gcc-${GCC_VER}
 	tar xjf ${DOWNLOAD_DIR}/gcc-${GCC_VER}.tar.bz2
+	patch -p0 <gcc.patch
 	cd gcc-${GCC_VER}
 	tar xjf ${DOWNLOAD_DIR}/gmp-${GMP_VER}.tar.bz2
 	tar xjf ${DOWNLOAD_DIR}/mpfr-${MPFR_VER}.tar.bz2
@@ -187,7 +187,7 @@ if [ ! -f .gcc ]; then
 	#cd ..
 
 	# hack: allow autoconf version 2.61 instead of 2.59
-	sed -i 's@\(.*_GCC_AUTOCONF_VERSION.*\)2.59\(.*\)@\12.61\2@' config/override.m4
+	#sed -i 's@\(.*_GCC_AUTOCONF_VERSION.*\)2.59\(.*\)@\12.61\2@' config/override.m4
 	autoconf
 
 	mkdir build
@@ -222,7 +222,7 @@ if [ ! -f .newlib ]; then
 	cd newlib-${NEWLIB_VER}
 
 	# hack: allow autoconf version 2.61 instead of 2.59
-	sed -i 's@\(.*_GCC_AUTOCONF_VERSION.*\)2.59\(.*\)@\12.61\2@' config/override.m4
+	#sed -i 's@\(.*_GCC_AUTOCONF_VERSION.*\)2.59\(.*\)@\12.61\2@' config/override.m4
 	autoconf
 	mkdir build
 	cd build
