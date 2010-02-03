@@ -1,6 +1,6 @@
 #!/bin/bash
 #
-# $Id: build-gcc-arm.sh,v 1.16 2009/11/06 23:55:51 claudio Exp $
+# $Id: build-gcc-arm.sh,v 1.17 2010/01/13 16:35:19 claudio Exp $
 #
 # @brief Build cross compiler for ARM Cortex M3 processor
 # 
@@ -16,7 +16,7 @@
 # @note Based on Leon Woestenberg <leon@sidebranch.com> http://www.sidebranch.com/
 #
 # @note You need to pre-install some Ubuntu packages on your host:
-# sudo apt-get install flex bison autoconf texinfo
+# sudo apt-get install flex bison autoconf texinfo gcc-4.2
 # and for GDB: 
 # sudo apt-get install libncurses5-dev 
 #
