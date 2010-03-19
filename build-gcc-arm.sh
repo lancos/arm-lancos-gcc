@@ -1,6 +1,6 @@
 #!/bin/bash
 #
-# $Id: build-gcc-arm.sh,v 1.17 2010/01/13 16:35:19 claudio Exp $
+# $Id: build-gcc-arm.sh,v 1.18 2010/02/03 15:55:34 gianluca Exp $
 #
 # @brief Build cross compiler for ARM Cortex M3 processor
 # 
@@ -41,10 +41,10 @@ echo "gcc utilizzato: $CC"
 
 DOWNLOAD_DIR=${CORTEX_TOPDIR}/downloads
 
-BINUTILS_VER=2.20
-GDB_VER=7.0.1
-GCC_VER=4.4.2
-GMP_VER=4.3.2
+BINUTILS_VER=2.20.1
+GDB_VER=7.1
+GCC_VER=4.4.3
+GMP_VER=5.0.1
 MPFR_VER=2.4.2
 NEWLIB_VER=1.18.0
 #INSIGHT_VER=6.8-1
@@ -147,7 +147,7 @@ cd ${CORTEX_TOPDIR}
 if [ ! -f .binutils ]; then
 	rm -rf binutils-${BINUTILS_VER}
 	tar xjf ${DOWNLOAD_DIR}/binutils-${BINUTILS_VER}.tar.bz2
-	patch -p0 <binutils.patch
+#	patch -p0 <binutils.patch	#necessario solo per binutils 2.20
 	cd binutils-${BINUTILS_VER}
 
 	# hack: allow autoconf version 2.61 instead of 2.59
