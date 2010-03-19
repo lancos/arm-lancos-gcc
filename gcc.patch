@@ -1,4 +1,4 @@
---- gcc-4.4.2/config/override.m4	2008-06-18 01:13:35.000000000 +0200
+--- gcc-4.4.3/config/override.m4	2008-06-18 01:13:35.000000000 +0200
 +++ override_new.m4	2010-01-13 17:00:42.000000000 +0100
 @@ -12,6 +12,16 @@
  dnl The _GCC_AUTOCONF_VERSION_TEST ensures that exactly the desired
