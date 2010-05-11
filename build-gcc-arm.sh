@@ -1,6 +1,6 @@
 #!/bin/bash
 #
-# $Id: build-gcc-arm.sh,v 1.18 2010/02/03 15:55:34 gianluca Exp $
+# $Id: build-gcc-arm.sh,v 1.19 2010/03/19 21:16:37 claudio Exp $
 #
 # @brief Build cross compiler for ARM Cortex M3 processor
 # 
@@ -43,11 +43,17 @@ DOWNLOAD_DIR=${CORTEX_TOPDIR}/downloads
 
 BINUTILS_VER=2.20.1
 GDB_VER=7.1
-GCC_VER=4.4.3
-GMP_VER=5.0.1
+#GCC_VER=4.4.3
+GCC_VER=4.5.0
+#GMP_VER=5.0.1 performance <--> 4.3.2 stable
+GMP_VER=4.3.2
 MPFR_VER=2.4.2
+MPC_VER=0.8.1
+PPL_VER=0.10.2
+CLOOGPPL_VER=0.15.6
 NEWLIB_VER=1.18.0
 #INSIGHT_VER=6.8-1
+LIBELF_VER=0.8.12
 
 #Snapshots releases
 #BINUTILS_VER=2.20.51
@@ -91,8 +97,12 @@ if [ "$1" == "local" ]; then
 	GCC_PATH=${LOCAL_PATH}
 	GMP_PATH=${LOCAL_PATH}
 	MPFR_PATH=${LOCAL_PATH}
+	MPC_PATH=${LOCAL_PATH}
+	PPL_PATH=${LOCAL_PATH}
+	CLOOGPPL_PATH=${LOCAL_PATH}
 	NEWLIB_PATH=${LOCAL_PATH}
 	INSIGHT_PATH=${LOCAL_PATH}
+	LIBELF_PATH=${LOCAL_PATH}
 else
 	#Usa percorsi remoti (tramite wget)
 	BINUTILS_PATH=http://ftp.gnu.org/pub/gnu/binutils
@@ -109,11 +119,15 @@ else
 
 	GMP_PATH=http://ftp.gnu.org/pub/gnu/gmp
 	MPFR_PATH=http://www.mpfr.org/mpfr-current
+	MPC_PATH=http://www.multiprecision.org/mpc/download
+	PPL_PATH=ftp://ftp.cs.unipr.it/pub/ppl/releases/${PPL_VER}
+	CLOOGPPL_PATH=ftp://gcc.gnu.org/pub/gcc/infrastructure
 	INSIGHT_PATH=ftp://sourceware.org/pub/insight/releases
+	LIBELF_PATH=http://www.mr511.de/software
 
 	#Snapshots path
 	#BINUTILS_PATH=ftp://sourceware.org/pub/binutils/snapshots
-	#GDB_PATH=ftp://sourceware.org/pub/gdb/snapshots/current              
+	#GDB_PATH=ftp://sourceware.org/pub/gdb/snapshots/current
 	#GCC_PATH=ftp://sourceware.org/pub/gcc/snapshots/${GCC_VER}
 	#INSIGHT_PATH=ftp://sourceware.org/pub/insight/snapshots/current
 fi
@@ -141,6 +155,32 @@ fi
 #if [ ! -f ${DOWNLOAD_DIR}/insight-${INSIGHT_VER}.tar.bz2 ]; then
 #	wget ${INSIGHT_PATH}/insight-${INSIGHT_VER}.tar.bz2
 #fi
+if [ ! -f ${DOWNLOAD_DIR}/mpc-${MPC_VER}.tar.gz ]; then
+	wget ${MPC_PATH}/mpc-${MPC_VER}.tar.gz
+fi
+if [ ! -f ${DOWNLOAD_DIR}/ppl-${PPL_VER}.tar.bz2 ]; then
+	wget ${PPL_PATH}/ppl-${PPL_VER}.tar.bz2
+fi
+if [ ! -f ${DOWNLOAD_DIR}/cloog-ppl-${CLOOGPPL_VER}.tar.gz ]; then
+	wget ${CLOOGPPL_PATH}/cloog-ppl-${CLOOGPPL_VER}.tar.gz
+fi
+if [ ! -f ${DOWNLOAD_DIR}/libelf-${LIBELF_VER}.tar.gz ]; then
+	wget ${LIBELF_PATH}/libelf-${LIBELF_VER}.tar.gz
+fi
+
+echo "Build LIBELF"
+cd ${CORTEX_TOPDIR}
+if [ ! -f .libelf ]; then
+	tar xfz ${DOWNLOAD_DIR}/libelf-${LIBELF_VER}.tar.gz
+	cd libelf-${LIBELF_VER}
+	mkdir build
+	cd build
+	../configure --prefix=${HOME} --enable-extended-format 2>&1 | tee configure.log
+	make -j${NUM_JOBS} 2>&1 | tee make.log
+	make install 2>&1 | tee makeinstall.log
+	cd ${CORTEX_TOPDIR}
+	touch .libelf
+fi
 
 echo "Build BINUTILS"
 cd ${CORTEX_TOPDIR}
@@ -173,12 +213,14 @@ cd ${CORTEX_TOPDIR}
 if [ ! -f .gcc ]; then
 	rm -rf gcc-${GCC_VER}
 	tar xjf ${DOWNLOAD_DIR}/gcc-${GCC_VER}.tar.bz2
-	patch -p0 <gcc.patch
+	#patch -p0 <gcc.patch
 	cd gcc-${GCC_VER}
-	tar xjf ${DOWNLOAD_DIR}/gmp-${GMP_VER}.tar.bz2
-	tar xjf ${DOWNLOAD_DIR}/mpfr-${MPFR_VER}.tar.bz2
+	tar xfj ${DOWNLOAD_DIR}/gmp-${GMP_VER}.tar.bz2
+	tar xfj ${DOWNLOAD_DIR}/mpfr-${MPFR_VER}.tar.bz2
+	tar xfz ${DOWNLOAD_DIR}/mpc-${MPC_VER}.tar.gz
 	ln -snf gmp-${GMP_VER} gmp
 	ln -snf mpfr-${MPFR_VER} mpfr
+	ln -snf mpc-${MPC_VER} mpc
 
 	#cd libstdc++-v3
 	## uncomment AC_LIBTOOL_DLOPEN
@@ -196,6 +238,7 @@ if [ ! -f .gcc ]; then
 	--with-cpu=cortex-m3 --with-mode=thumb --enable-interwork --disable-multilib \
 	--enable-languages="c,c++" --with-newlib --without-headers \
 	--disable-shared --with-gnu-as --with-gnu-ld \
+	--enable-stage1-checking=all --enable-lto --with-libelf=${HOME} \
 	2>&1 | tee configure.log
 
 	make -j${NUM_JOBS} all-gcc 2>&1 | tee make.log
