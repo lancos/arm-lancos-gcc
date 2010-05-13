@@ -1,6 +1,6 @@
 #!/bin/bash
 #
-# $Id: build-gcc-arm.sh,v 1.19 2010/03/19 21:16:37 claudio Exp $
+# $Id: build-gcc-arm.sh,v 1.20 2010/05/11 21:34:20 claudio Exp $
 #
 # @brief Build cross compiler for ARM Cortex M3 processor
 # 
@@ -32,9 +32,15 @@
 set -o errexit
 set -o pipefail
 
+export PATH=${HOME}/bin:${PATH}
+export LD_LIBRARY_PATH=${HOME}/lib:${LD_LIBRARY_PATH}
+echo $PATH
+echo $LD_LIBRARY_PATH
+
 CORTEX_TOPDIR=`pwd`
 
 #Per ubuntu 8.04, 8.10 e 9.04 va bene il gcc-4.2, per altre distro (FC10) utilizzare il gcc standard
+# Non utilizzare gcc 4.3.2 che da` problemi a compilare GMP per macchine a 64bit (http://gmplib.org/)
 #export CC=gcc
 export CC=gcc-4.2
 echo "gcc utilizzato: $CC"
@@ -182,11 +188,53 @@ if [ ! -f .libelf ]; then
 	touch .libelf
 fi
 
+echo "Build GMP"
+cd ${CORTEX_TOPDIR}
+if [ ! -f .libgmp ]; then
+	tar xfj ${DOWNLOAD_DIR}/gmp-${GMP_VER}.tar.bz2
+	cd gmp-${GMP_VER}
+	mkdir build
+	cd build
+	../configure --prefix=${HOME} --enable-cxx 2>&1 | tee configure.log
+	make -j${NUM_JOBS} 2>&1 | tee make.log
+	make install 2>&1 | tee makeinstall.log
+	cd ${CORTEX_TOPDIR}
+	touch .libgmp
+fi
+
+echo "Build PPL"
+cd ${CORTEX_TOPDIR}
+if [ ! -f .libppl ]; then
+	tar xfj ${DOWNLOAD_DIR}/ppl-${PPL_VER}.tar.bz2
+	cd ppl-${PPL_VER}
+	mkdir build
+	cd build
+	../configure --prefix=${HOME} --with-libgmp-prefix=${HOME} --with-libgmpxx-prefix=${HOME} 2>&1 | tee configure.log
+	make -j${NUM_JOBS} 2>&1 | tee make.log
+	make install 2>&1 | tee makeinstall.log
+	cd ${CORTEX_TOPDIR}
+	touch .libppl
+fi
+
+echo "Build CLOOG"
+cd ${CORTEX_TOPDIR}
+if [ ! -f .libcloog ]; then
+	tar xfz ${DOWNLOAD_DIR}/cloog-ppl-${CLOOGPPL_VER}.tar.gz
+	cd cloog-ppl-${CLOOGPPL_VER}
+	mkdir build
+	cd build
+	../configure --prefix=${HOME} --with-gmp=${HOME} --with-ppl=${HOME} 2>&1 | tee configure.log
+	make -j${NUM_JOBS} 2>&1 | tee make.log
+	make install 2>&1 | tee makeinstall.log
+	cd ${CORTEX_TOPDIR}
+	touch .libcloog
+fi
+
 echo "Build BINUTILS"
 cd ${CORTEX_TOPDIR}
 if [ ! -f .binutils ]; then
 	rm -rf binutils-${BINUTILS_VER}
-	tar xjf ${DOWNLOAD_DIR}/binutils-${BINUTILS_VER}.tar.bz2
+	tar xfj ${DOWNLOAD_DIR}/binutils-${BINUTILS_VER}.tar.bz2
 #	patch -p0 <binutils.patch	#necessario solo per binutils 2.20
 	cd binutils-${BINUTILS_VER}
 
@@ -212,7 +260,7 @@ echo "Build GCC (first half)"
 cd ${CORTEX_TOPDIR}
 if [ ! -f .gcc ]; then
 	rm -rf gcc-${GCC_VER}
-	tar xjf ${DOWNLOAD_DIR}/gcc-${GCC_VER}.tar.bz2
+	tar xfj ${DOWNLOAD_DIR}/gcc-${GCC_VER}.tar.bz2
 	#patch -p0 <gcc.patch
 	cd gcc-${GCC_VER}
 	tar xfj ${DOWNLOAD_DIR}/gmp-${GMP_VER}.tar.bz2
@@ -238,7 +286,7 @@ if [ ! -f .gcc ]; then
 	--with-cpu=cortex-m3 --with-mode=thumb --enable-interwork --disable-multilib \
 	--enable-languages="c,c++" --with-newlib --without-headers \
 	--disable-shared --with-gnu-as --with-gnu-ld \
-	--enable-stage1-checking=all --enable-lto --with-libelf=${HOME} \
+	--enable-stage1-checking=all --enable-lto --with-libelf=${HOME} --with-ppl=${HOME} --with-cloog=${HOME} \
 	2>&1 | tee configure.log
 
 	make -j${NUM_JOBS} all-gcc 2>&1 | tee make.log
@@ -295,7 +343,7 @@ echo "Build GDB"
 cd ${CORTEX_TOPDIR}
 if [ ! -f .gdb ]; then
 	rm -rf gdb-${GDB_VER}
-	tar xjf ${DOWNLOAD_DIR}/gdb-${GDB_VER}.tar.bz2
+	tar xfj ${DOWNLOAD_DIR}/gdb-${GDB_VER}.tar.bz2
 	cd gdb-${GDB_VER}
 	mkdir build
 	cd build
