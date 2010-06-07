@@ -1,6 +1,6 @@
 #!/bin/bash
 #
-# $Id: build-gcc-arm.sh,v 1.20 2010/05/11 21:34:20 claudio Exp $
+# $Id: build-gcc-arm.sh,v 1.21 2010/05/13 13:22:44 claudio Exp $
 #
 # @brief Build cross compiler for ARM Cortex M3 processor
 # 
@@ -323,7 +323,7 @@ if [ ! -f .newlib ]; then
 	--enable-newlib-elix-level=1 --disable-newlib-io-float --disable-newlib-atexit-dynamic-alloc --enable-newlib-reent-small --disable-shared \
 	--enable-newlib-multithread \
 	2>&1 | tee configure.log
-	make -j${NUM_JOBS} CFLAGS_FOR_TARGET="-DREENTRANT_SYSCALLS_PROVIDED" 2>&1 | tee make.log
+	make -j${NUM_JOBS} CFLAGS_FOR_TARGET="-DREENTRANT_SYSCALLS_PROVIDED -DSMALL_MEMORY" 2>&1 | tee make.log
 	make install 2>&1 | tee install.log
 	cd ${CORTEX_TOPDIR}
 	touch .newlib
