@@ -1,6 +1,6 @@
 #!/bin/bash
 #
-# $Id: build-gcc-arm.sh,v 1.23 2010/08/25 14:28:25 claudio Exp $
+# $Id: build-gcc-arm.sh,v 1.24 2010/08/25 14:42:38 claudio Exp $
 #
 # @brief Build cross compiler for ARM Cortex M3 processor
 # 
@@ -174,6 +174,8 @@ if [ ! -f ${DOWNLOAD_DIR}/libelf-${LIBELF_VER}.tar.gz ]; then
 fi
 
 echo "Start building static libs..."
+mkdir -p ${CORTEX_TOPDIR}/static
+
 echo "Build LIBELF"
 cd ${CORTEX_TOPDIR}
 if [ ! -f .libelf ]; then
