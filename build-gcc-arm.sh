@@ -1,6 +1,6 @@
 #!/bin/bash
 #
-# $Id: build-gcc-arm.sh,v 1.22 2010/06/07 15:33:49 claudio Exp $
+# $Id: build-gcc-arm.sh,v 1.23 2010/08/25 14:28:25 claudio Exp $
 #
 # @brief Build cross compiler for ARM Cortex M3 processor
 # 
@@ -304,7 +304,7 @@ cd ${CORTEX_TOPDIR}
 if [ ! -f .gcc ]; then
 	rm -rf gcc-${GCC_VER}
 	tar xfj ${DOWNLOAD_DIR}/gcc-${GCC_VER}.tar.bz2
-	#patch -p0 <gcc.patch
+#	patch -p0 <gcc.patch
 	cd gcc-${GCC_VER}
 #	tar xfj ${DOWNLOAD_DIR}/gmp-${GMP_VER}.tar.bz2
 #	tar xfj ${DOWNLOAD_DIR}/mpfr-${MPFR_VER}.tar.bz2
@@ -359,7 +359,7 @@ if [ ! -f .newlib ]; then
 
 	rm -rf newlib-${NEWLIB_VER}
 	tar xfz ${DOWNLOAD_DIR}/newlib-${NEWLIB_VER}.tar.gz
-#	patch -p0 <newlib_mktime.diff
+	patch -p0 <newlib_mktime.diff
 	cd newlib-${NEWLIB_VER}
 
 	# hack: allow autoconf version 2.61 instead of 2.59
