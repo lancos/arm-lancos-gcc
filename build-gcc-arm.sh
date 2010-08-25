@@ -1,6 +1,6 @@
 #!/bin/bash
 #
-# $Id: build-gcc-arm.sh,v 1.21 2010/05/13 13:22:44 claudio Exp $
+# $Id: build-gcc-arm.sh,v 1.22 2010/06/07 15:33:49 claudio Exp $
 #
 # @brief Build cross compiler for ARM Cortex M3 processor
 # 
@@ -32,31 +32,30 @@
 set -o errexit
 set -o pipefail
 
-export PATH=${HOME}/bin:${PATH}
-export LD_LIBRARY_PATH=${HOME}/lib:${LD_LIBRARY_PATH}
-echo $PATH
-echo $LD_LIBRARY_PATH
+#export PATH=${HOME}/bin:${PATH}
+#export LD_LIBRARY_PATH=${HOME}/lib:${LD_LIBRARY_PATH}
+#echo $PATH
+#echo $LD_LIBRARY_PATH
 
 CORTEX_TOPDIR=`pwd`
 
 #Per ubuntu 8.04, 8.10 e 9.04 va bene il gcc-4.2, per altre distro (FC10) utilizzare il gcc standard
 # Non utilizzare gcc 4.3.2 che da` problemi a compilare GMP per macchine a 64bit (http://gmplib.org/)
-#export CC=gcc
-export CC=gcc-4.2
+export CC=gcc
+#export CC=gcc-4.2
 echo "gcc utilizzato: $CC"
 
 DOWNLOAD_DIR=${CORTEX_TOPDIR}/downloads
 
 BINUTILS_VER=2.20.1
 GDB_VER=7.1
-#GCC_VER=4.4.3
-GCC_VER=4.5.0
+GCC_VER=4.5.1
 #GMP_VER=5.0.1 performance <--> 4.3.2 stable
 GMP_VER=4.3.2
 MPFR_VER=2.4.2
 MPC_VER=0.8.1
 PPL_VER=0.10.2
-CLOOGPPL_VER=0.15.6
+CLOOGPPL_VER=0.15.9
 NEWLIB_VER=1.18.0
 #INSIGHT_VER=6.8-1
 LIBELF_VER=0.8.12
@@ -77,7 +76,7 @@ TOOLCHAIN_PATH=${HOME}/${TOOLCHAIN_NAME}
 TOOLCHAIN_TARGET=arm-lancos-eabi
 
 #Numero di compilazioni concorrenti (consigliabile 2+ per un dual-core o 4+ per un quad-core)
-NUM_JOBS=4
+NUM_JOBS=2
 
 mkdir -p ${TOOLCHAIN_PATH}
 
@@ -174,14 +173,17 @@ if [ ! -f ${DOWNLOAD_DIR}/libelf-${LIBELF_VER}.tar.gz ]; then
 	wget ${LIBELF_PATH}/libelf-${LIBELF_VER}.tar.gz
 fi
 
+echo "Start building static libs..."
 echo "Build LIBELF"
 cd ${CORTEX_TOPDIR}
 if [ ! -f .libelf ]; then
+	rm -rf libelf-${LIBELF_VER}
 	tar xfz ${DOWNLOAD_DIR}/libelf-${LIBELF_VER}.tar.gz
 	cd libelf-${LIBELF_VER}
 	mkdir build
 	cd build
-	../configure --prefix=${HOME} --enable-extended-format 2>&1 | tee configure.log
+#	../configure --prefix=${HOME} --enable-extended-format 2>&1 | tee configure.log
+	../configure --prefix=${CORTEX_TOPDIR}/static --disable-shared --enable-extended-format 2>&1 | tee configure.log
 	make -j${NUM_JOBS} 2>&1 | tee make.log
 	make install 2>&1 | tee makeinstall.log
 	cd ${CORTEX_TOPDIR}
@@ -191,25 +193,44 @@ fi
 echo "Build GMP"
 cd ${CORTEX_TOPDIR}
 if [ ! -f .libgmp ]; then
+	rm -rf gmp-${GMP_VER}
 	tar xfj ${DOWNLOAD_DIR}/gmp-${GMP_VER}.tar.bz2
 	cd gmp-${GMP_VER}
 	mkdir build
 	cd build
-	../configure --prefix=${HOME} --enable-cxx 2>&1 | tee configure.log
+#	../configure --prefix=${HOME} --enable-cxx 2>&1 | tee configure.log
+	../configure --prefix=${CORTEX_TOPDIR}/static --enable-cxx --enable-fft --enable-mpbsd --disable-shared --enable-static 2>&1 | tee configure.log
 	make -j${NUM_JOBS} 2>&1 | tee make.log
 	make install 2>&1 | tee makeinstall.log
 	cd ${CORTEX_TOPDIR}
 	touch .libgmp
 fi
 
+echo "Build MPFR"
+cd ${CORTEX_TOPDIR}
+if [ ! -f .libmpfr ]; then
+	rm -rf mpfr-${MPFR_VER}
+	tar xfj ${DOWNLOAD_DIR}/mpfr-${MPFR_VER}.tar.bz2
+	cd mpfr-${MPFR_VER}
+	mkdir build
+	cd build
+	../configure --prefix=${CORTEX_TOPDIR}/static --with-gmp=${CORTEX_TOPDIR}/static --enable-thread-safe --disable-shared --enable-static
+	make -j${NUM_JOBS} 2>&1 | tee make.log
+	make install 2>&1 | tee makeinstall.log
+	cd ${CORTEX_TOPDIR}
+	touch .libmpfr
+fi
+
 echo "Build PPL"
 cd ${CORTEX_TOPDIR}
 if [ ! -f .libppl ]; then
+	rm -rf ppl-${PPL_VER} 
 	tar xfj ${DOWNLOAD_DIR}/ppl-${PPL_VER}.tar.bz2
 	cd ppl-${PPL_VER}
 	mkdir build
 	cd build
-	../configure --prefix=${HOME} --with-libgmp-prefix=${HOME} --with-libgmpxx-prefix=${HOME} 2>&1 | tee configure.log
+#	../configure --prefix=${HOME} --with-libgmp-prefix=${HOME} --with-libgmpxx-prefix=${HOME} 2>&1 | tee configure.log
+	../configure --prefix=${CORTEX_TOPDIR}/static --with-libgmp-prefix=${CORTEX_TOPDIR}/static --with-libgmpxx-prefix=${CORTEX_TOPDIR}/static --disable-debugging --disable-assertions --disable-ppl_lcdd --disable-ppl_lpsol --disable-shared --enable-static
 	make -j${NUM_JOBS} 2>&1 | tee make.log
 	make install 2>&1 | tee makeinstall.log
 	cd ${CORTEX_TOPDIR}
@@ -219,17 +240,36 @@ fi
 echo "Build CLOOG"
 cd ${CORTEX_TOPDIR}
 if [ ! -f .libcloog ]; then
+	rm -rf cloog-ppl-${CLOOGPPL_VER}
 	tar xfz ${DOWNLOAD_DIR}/cloog-ppl-${CLOOGPPL_VER}.tar.gz
 	cd cloog-ppl-${CLOOGPPL_VER}
 	mkdir build
 	cd build
-	../configure --prefix=${HOME} --with-gmp=${HOME} --with-ppl=${HOME} 2>&1 | tee configure.log
+#	../configure --prefix=${HOME} --with-gmp=${HOME} --with-ppl=${HOME} 2>&1 | tee configure.log
+	../configure --prefix=${CORTEX_TOPDIR}/static --with-gmp=${CORTEX_TOPDIR}/static --with-ppl=${CORTEX_TOPDIR}/static --with-bits=gmp --disable-shared --enable-static --with-host-libstdcxx="-lstdc++"
 	make -j${NUM_JOBS} 2>&1 | tee make.log
 	make install 2>&1 | tee makeinstall.log
 	cd ${CORTEX_TOPDIR}
 	touch .libcloog
 fi
 
+echo "Build MPC"
+cd ${CORTEX_TOPDIR}
+if [ ! -f .libmpc ]; then
+	rm -rf mpc-${MPC_VER}
+	tar xfz ${DOWNLOAD_DIR}/mpc-${MPC_VER}.tar.gz
+	cd mpc-${MPC_VER}
+	mkdir build
+	cd build
+	../configure --prefix=${CORTEX_TOPDIR}/static --with-gmp=${CORTEX_TOPDIR}/static --with-mpfr=${CORTEX_TOPDIR}/static --disable-shared --enable-static
+	make -j${NUM_JOBS} 2>&1 | tee make.log
+	make install 2>&1 | tee makeinstall.log
+	cd ${CORTEX_TOPDIR}
+	touch .libmpc
+fi
+
+echo ".Done"
+echo "Start building tools..."
 echo "Build BINUTILS"
 cd ${CORTEX_TOPDIR}
 if [ ! -f .binutils ]; then
@@ -239,14 +279,17 @@ if [ ! -f .binutils ]; then
 	cd binutils-${BINUTILS_VER}
 
 	# hack: allow autoconf version 2.61 instead of 2.59
-	#sed -i 's@\(.*_GCC_AUTOCONF_VERSION.*\)2.59\(.*\)@\12.61\2@' config/override.m4
+	sed -i 's@\(.*_GCC_AUTOCONF_VERSION.*\)2.64\(.*\)@\12.65\2@' config/override.m4
 	autoconf
 	mkdir build
 	cd build
 	../configure --target=${TOOLCHAIN_TARGET} --prefix=${TOOLCHAIN_PATH} \
-	--enable-interwork --disable-multilib --with-gnu-as --with-gnu-ld --disable-nls \
+	--enable-interwork --disable-multilib --with-gnu-as --with-gnu-ld --disable-nls --with-float=soft\
+	--with-gmp=${CORTEX_TOPDIR}/static --with-mpfr=${CORTEX_TOPDIR}/static --with-mpc=${CORTEX_TOPDIR}/static \
+	--with-ppl=${CORTEX_TOPDIR}/static --with-cloog=${CORTEX_TOPDIR}/static \
 	2>&1 | tee configure.log
 
+#	--with-gmp= --with-mpfr= --with-float=soft --with-sysroot=
 	make -j${NUM_JOBS} all 2>&1 | tee make.log
 	make install 2>&1 | tee install.log
 	cd $CORTEX_TOPDIR
@@ -263,12 +306,12 @@ if [ ! -f .gcc ]; then
 	tar xfj ${DOWNLOAD_DIR}/gcc-${GCC_VER}.tar.bz2
 	#patch -p0 <gcc.patch
 	cd gcc-${GCC_VER}
-	tar xfj ${DOWNLOAD_DIR}/gmp-${GMP_VER}.tar.bz2
-	tar xfj ${DOWNLOAD_DIR}/mpfr-${MPFR_VER}.tar.bz2
-	tar xfz ${DOWNLOAD_DIR}/mpc-${MPC_VER}.tar.gz
-	ln -snf gmp-${GMP_VER} gmp
-	ln -snf mpfr-${MPFR_VER} mpfr
-	ln -snf mpc-${MPC_VER} mpc
+#	tar xfj ${DOWNLOAD_DIR}/gmp-${GMP_VER}.tar.bz2
+#	tar xfj ${DOWNLOAD_DIR}/mpfr-${MPFR_VER}.tar.bz2
+#	tar xfz ${DOWNLOAD_DIR}/mpc-${MPC_VER}.tar.gz
+#	ln -snf gmp-${GMP_VER} gmp
+#	ln -snf mpfr-${MPFR_VER} mpfr
+#	ln -snf mpc-${MPC_VER} mpc
 
 	#cd libstdc++-v3
 	## uncomment AC_LIBTOOL_DLOPEN
@@ -277,7 +320,7 @@ if [ ! -f .gcc ]; then
 	#cd ..
 
 	# hack: allow autoconf version 2.61 instead of 2.59
-	#sed -i 's@\(.*_GCC_AUTOCONF_VERSION.*\)2.59\(.*\)@\12.61\2@' config/override.m4
+	sed -i 's@\(.*_GCC_AUTOCONF_VERSION.*\)2.64\(.*\)@\12.65\2@' config/override.m4
 	autoconf
 
 	mkdir build
@@ -286,8 +329,14 @@ if [ ! -f .gcc ]; then
 	--with-cpu=cortex-m3 --with-mode=thumb --enable-interwork --disable-multilib \
 	--enable-languages="c,c++" --with-newlib --without-headers \
 	--disable-shared --with-gnu-as --with-gnu-ld \
-	--enable-stage1-checking=all --enable-lto --with-libelf=${HOME} --with-ppl=${HOME} --with-cloog=${HOME} \
+	--enable-stage1-checking=all --enable-lto \
+	--disable-nls --with-host-libstdcxx='-lstdc++' \
+	--with-tune=cortex-m3 --with-float=soft --disable-__cxa_atexit \
+	--with-gmp=${CORTEX_TOPDIR}/static --with-mpfr=${CORTEX_TOPDIR}/static --with-mpc=${CORTEX_TOPDIR}/static \
+	--with-libelf=${CORTEX_TOPDIR}/static --with-ppl=${CORTEX_TOPDIR}/static --with-cloog=${CORTEX_TOPDIR}/static \
 	2>&1 | tee configure.log
+
+#	--enable-target-optspace
 
 	make -j${NUM_JOBS} all-gcc 2>&1 | tee make.log
 	make install-gcc 2>&1 | tee install.log
@@ -310,10 +359,11 @@ if [ ! -f .newlib ]; then
 
 	rm -rf newlib-${NEWLIB_VER}
 	tar xfz ${DOWNLOAD_DIR}/newlib-${NEWLIB_VER}.tar.gz
+#	patch -p0 <newlib_mktime.diff
 	cd newlib-${NEWLIB_VER}
 
 	# hack: allow autoconf version 2.61 instead of 2.59
-	#sed -i 's@\(.*_GCC_AUTOCONF_VERSION.*\)2.59\(.*\)@\12.61\2@' config/override.m4
+	sed -i 's@\(.*_GCC_AUTOCONF_VERSION.*\)2.64\(.*\)@\12.65\2@' config/override.m4
 	autoconf
 	mkdir build
 	cd build
@@ -323,7 +373,7 @@ if [ ! -f .newlib ]; then
 	--enable-newlib-elix-level=1 --disable-newlib-io-float --disable-newlib-atexit-dynamic-alloc --enable-newlib-reent-small --disable-shared \
 	--enable-newlib-multithread \
 	2>&1 | tee configure.log
-	make -j${NUM_JOBS} CFLAGS_FOR_TARGET="-DREENTRANT_SYSCALLS_PROVIDED -DSMALL_MEMORY" 2>&1 | tee make.log
+	make -j${NUM_JOBS} CFLAGS_FOR_TARGET="-DREENTRANT_SYSCALLS_PROVIDED -DSMALL_MEMORY -DHAVE_ASSERT_FUNC" 2>&1 | tee make.log
 	make install 2>&1 | tee install.log
 	cd ${CORTEX_TOPDIR}
 	touch .newlib
@@ -371,7 +421,43 @@ fi
 #	touch .insight
 #fi
 
-echo "Done. Build TAR GZ package..."
-cd ${TOOLCHAIN_PATH}/..
-tar cfj ${TOOLCHAIN_NAME}.tar.bz2 ${TOOLCHAIN_NAME}
-echo "Done"
+echo "Done. Stripping binaries..."
+cd ${TOOLCHAIN_PATH}/libexec/gcc/arm-lancos-eabi/${GCC_VER}
+strip cc1
+strip cc1plus
+
+cd ${TOOLCHAIN_PATH}/bin
+strip arm-lancos-eabi-addr2line
+strip arm-lancos-eabi-ar
+strip arm-lancos-eabi-as
+strip arm-lancos-eabi-c++
+strip arm-lancos-eabi-c++filt
+strip arm-lancos-eabi-cpp
+strip arm-lancos-eabi-g++
+strip arm-lancos-eabi-gcc
+strip arm-lancos-eabi-gcc-${GCC_VER}
+strip arm-lancos-eabi-gcov
+strip arm-lancos-eabi-gdb
+strip arm-lancos-eabi-gdbtui
+strip arm-lancos-eabi-gprof
+strip arm-lancos-eabi-ld
+strip arm-lancos-eabi-nm
+strip arm-lancos-eabi-objcopy
+strip arm-lancos-eabi-objdump
+strip arm-lancos-eabi-ranlib
+strip arm-lancos-eabi-readelf
+strip arm-lancos-eabi-run
+strip arm-lancos-eabi-size
+strip arm-lancos-eabi-strings
+strip arm-lancos-eabi-strip
+
+cd ${CORTEX_TOPDIR}
+if [ ! -f .targz ]; then
+	echo "Done. Build TAR GZ package..."
+	cd ${TOOLCHAIN_PATH}/..
+	tar cfj ${TOOLCHAIN_NAME}.tar.bz2 ${TOOLCHAIN_NAME}
+	echo "TAR GZ Done"
+	cd ${CORTEX_TOPDIR}
+	touch .targz
+fi
+echo "Done."
