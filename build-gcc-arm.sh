@@ -1,17 +1,18 @@
 #!/bin/bash
 #
-# $Id: build-gcc-arm.sh,v 1.24 2010/08/25 14:42:38 claudio Exp $
+# $Id: build-gcc-arm.sh,v 1.25 2010/08/25 15:14:29 claudio Exp $
 #
 # @brief Build cross compiler for ARM Cortex M3 processor
 # 
 # Builds a bare-metal cross GNU toolchain targetting the ARM Cortex M3
 # microprocessor in EABI mode and using the newlib embedded C library.
 #
-# @version $Version$
+# @version $Revision$
 # @author  Claudio Lanconelli
 # @note This script was tested on a Ubuntu Linux 8.04 (x86 32/64bit) and
 #       Ubuntu 9.04 but with GCC 4.2.4 (newer version seems to rise some errors)
 #       This script was tested also on a Fedora core 10 x86 32bit
+#		Tested on Kubuntu 32bit 10.04 (gcc 4.4.3)
 #
 # @note Based on Leon Woestenberg <leon@sidebranch.com> http://www.sidebranch.com/
 #
@@ -20,10 +21,10 @@
 # and for GDB: 
 # sudo apt-get install libncurses5-dev 
 #
-# @note Richiede autoconf 2.64
+# @note Richiede autoconf 2.65
 #
-# @note This script overrides gcc's autoconf 2.59 version dependency
-# to 2.64.
+# @note This script overrides gcc's autoconf 2.64 version dependency
+# to 2.65.
 #
 # @note aggiunto insight-gdb e modificato opzioni della newlib, nonche`
 # scaricamento della newlib da sito ufficiale.
@@ -47,18 +48,18 @@ echo "gcc utilizzato: $CC"
 
 DOWNLOAD_DIR=${CORTEX_TOPDIR}/downloads
 
-BINUTILS_VER=2.20.1
-GDB_VER=7.1
-GCC_VER=4.5.1
+BINUTILS_VER=2.21
+GDB_VER=7.2
+GCC_VER=4.5.2
 #GMP_VER=5.0.1 performance <--> 4.3.2 stable
 GMP_VER=4.3.2
 MPFR_VER=2.4.2
-MPC_VER=0.8.1
+MPC_VER=0.8.2
 PPL_VER=0.10.2
 CLOOGPPL_VER=0.15.9
-NEWLIB_VER=1.18.0
+NEWLIB_VER=1.19.0
 #INSIGHT_VER=6.8-1
-LIBELF_VER=0.8.12
+LIBELF_VER=0.8.13
 
 #Snapshots releases
 #BINUTILS_VER=2.20.51
@@ -280,7 +281,7 @@ if [ ! -f .binutils ]; then
 #	patch -p0 <binutils.patch	#necessario solo per binutils 2.20
 	cd binutils-${BINUTILS_VER}
 
-	# hack: allow autoconf version 2.61 instead of 2.59
+	# hack: allow autoconf version 2.65 instead of 2.64
 	sed -i 's@\(.*_GCC_AUTOCONF_VERSION.*\)2.64\(.*\)@\12.65\2@' config/override.m4
 	autoconf
 	mkdir build
@@ -321,7 +322,7 @@ if [ ! -f .gcc ]; then
 	#autoconf
 	#cd ..
 
-	# hack: allow autoconf version 2.61 instead of 2.59
+	# hack: allow autoconf version 2.65 instead of 2.64
 	sed -i 's@\(.*_GCC_AUTOCONF_VERSION.*\)2.64\(.*\)@\12.65\2@' config/override.m4
 	autoconf
 
@@ -364,7 +365,7 @@ if [ ! -f .newlib ]; then
 	patch -p0 <newlib_mktime.diff
 	cd newlib-${NEWLIB_VER}
 
-	# hack: allow autoconf version 2.61 instead of 2.59
+	# hack: allow autoconf version 2.65 instead of 2.64
 	sed -i 's@\(.*_GCC_AUTOCONF_VERSION.*\)2.64\(.*\)@\12.65\2@' config/override.m4
 	autoconf
 	mkdir build
