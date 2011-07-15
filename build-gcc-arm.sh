@@ -1,13 +1,13 @@
 #!/bin/bash
 #
-# $Id: build-gcc-arm.sh,v 1.26 2010/12/17 21:46:54 claudio Exp $
+# $Id: build-gcc-arm.sh,v 1.27.2.6 2011/07/15 12:29:49 claudio Exp $
 #
 # @brief Build cross compiler for ARM Cortex M3 processor
 # 
 # Builds a bare-metal cross GNU toolchain targetting the ARM Cortex M3
 # microprocessor in EABI mode and using the newlib embedded C library.
 #
-# @version $Revision: 1.26 $
+# @version $Revision: 1.27.2.6 $
 # @author  Claudio Lanconelli
 # @note This script was tested on a Ubuntu Linux 8.04 (x86 32/64bit) and
 #       Ubuntu 9.04 but with GCC 4.2.4 (newer version seems to rise some errors)
@@ -48,18 +48,19 @@ echo "gcc utilizzato: $CC"
 
 DOWNLOAD_DIR=${CORTEX_TOPDIR}/downloads
 
-BINUTILS_VER=2.20.1
+BINUTILS_VER=2.21.1
 GDB_VER=7.2
-GCC_VER=4.5.2
+GCC_VER=4.5.3
 #GMP_VER=5.0.1 performance <--> 4.3.2 stable
 GMP_VER=4.3.2
 MPFR_VER=2.4.2
 MPC_VER=0.8.2
 PPL_VER=0.10.2
-CLOOGPPL_VER=0.15.9
+CLOOGPPL_VER=0.15.11
 NEWLIB_VER=1.19.0
 #INSIGHT_VER=6.8-1
 LIBELF_VER=0.8.13
+EXPAT_VER=2.0.1
 
 #Snapshots releases
 #BINUTILS_VER=2.20.51
@@ -67,8 +68,10 @@ LIBELF_VER=0.8.13
 #GCC_VER=4.5-20091029
 #INSIGHT_VER=weekly-7.0.50-20091102
 
-TOOLCHAIN_NAME=gcc${GCC_VER}-bu${BINUTILS_VER}-gdb${GDB_VER}-nl${NEWLIB_VER}
-echo "Build toolchain $TOOLCHAIN_NAME"
+TOOLCHAIN_NAME="gcc${GCC_VER}-bu${BINUTILS_VER}-gdb${GDB_VER}-nl${NEWLIB_VER}"
+TOOLCHAINLIB_NAME="gmp${GMP_VER}-mpfr${MPFR_VER}-mpc${MPC_VER}-ppl${PPL_VER}-cloog${CLOOGPPL_VER}-libelf${LIBELF_VER}-expat${EXPAT_VER}"
+echo "Build toolchain ${TOOLCHAIN_NAME}"
+echo "toolchain libs ${TOOLCHAINLIB_NAME}"
 
 #Dove verra` installato il toolchain
 TOOLCHAIN_PATH=${HOME}/${TOOLCHAIN_NAME}
@@ -81,10 +84,10 @@ NUM_JOBS=2
 
 mkdir -p ${TOOLCHAIN_PATH}
 
-if touch ${TOOLCHAIN_PATH}/need_write_access_here
+if touch ${TOOLCHAIN_PATH}/toolchain_libs
   then
 	echo "Install dir: ${TOOLCHAIN_PATH}"
-	rm -f ${TOOLCHAIN_PATH}/need_write_access_here
+	echo "${TOOLCHAINLIB_NAME}" >${TOOLCHAIN_PATH}/toolchain_libs
   else
 	echo "Need ${TOOLCHAIN_PATH} directory with write access."
 	exit 1
@@ -109,6 +112,11 @@ if [ "$1" == "local" ]; then
 	NEWLIB_PATH=${LOCAL_PATH}
 	INSIGHT_PATH=${LOCAL_PATH}
 	LIBELF_PATH=${LOCAL_PATH}
+
+	if [ ! -f ${DOWNLOAD_DIR}/expat-${EXPAT_VER}.tar.gz ]; then
+		cd ${DOWNLOAD_DIR}
+		wget ${LOCAL_PATH}/expat-${EXPAT_VER}.tar.gz
+	fi
 else
 	#Usa percorsi remoti (tramite wget)
 	BINUTILS_PATH=http://ftp.gnu.org/pub/gnu/binutils
@@ -130,6 +138,13 @@ else
 	CLOOGPPL_PATH=ftp://gcc.gnu.org/pub/gcc/infrastructure
 	INSIGHT_PATH=ftp://sourceware.org/pub/insight/releases
 	LIBELF_PATH=http://www.mr511.de/software
+	EXPAT_PATH=http://sourceforge.net/projects/expat/files/expat/${EXPAT_VER}/expat-${EXPAT_VER}.tar.gz
+
+	if [ ! -f ${DOWNLOAD_DIR}/expat-${EXPAT_VER}.tar.gz ]; then
+		cd ${DOWNLOAD_DIR}
+		wget ${EXPAT_PATH}/download
+		mv download expat-${EXPAT_VER}.tar.gz
+	fi
 
 	#Snapshots path
 	#BINUTILS_PATH=ftp://sourceware.org/pub/binutils/snapshots
@@ -174,8 +189,30 @@ if [ ! -f ${DOWNLOAD_DIR}/libelf-${LIBELF_VER}.tar.gz ]; then
 	wget ${LIBELF_PATH}/libelf-${LIBELF_VER}.tar.gz
 fi
 
+#Vista MinGW workaround (da Yagarto)
+echo "${OSTYPE}"
+if [ "${OSTYPE}" == "msys" ]; then
+	export CFLAGS=-D__USE_MINGW_ACCESS
+fi
+
 echo "Start building static libs..."
 mkdir -p ${CORTEX_TOPDIR}/static
+
+echo "Build EXPAT"
+cd ${CORTEX_TOPDIR}
+if [ ! -f .libexpat ]; then
+	rm -rf expat-${EXPAT_VER}
+	tar xfz ${DOWNLOAD_DIR}/expat-${EXPAT_VER}.tar.gz
+	cd expat-${EXPAT_VER}
+	mkdir build
+	cd build
+	../configure --prefix=${CORTEX_TOPDIR}/static --disable-shared \
+	2>&1 | tee configure.log
+	make buildlib -j${NUM_JOBS} 2>&1 | tee make.log
+	make installlib 2>&1 | tee install.log
+	cd ${CORTEX_TOPDIR}
+	touch .libexpat
+fi
 
 echo "Build LIBELF"
 cd ${CORTEX_TOPDIR}
@@ -201,9 +238,17 @@ if [ ! -f .libgmp ]; then
 	cd gmp-${GMP_VER}
 	mkdir build
 	cd build
-#	../configure --prefix=${HOME} --enable-cxx 2>&1 | tee configure.log
-	../configure --prefix=${CORTEX_TOPDIR}/static --enable-cxx --enable-fft --enable-mpbsd --disable-shared --enable-static 2>&1 | tee configure.log
+	#Forziamo ABI=32 quando compiliamo in mingw32, questo per evitare mismatch 64bit su core2 e win32
+	if [ "${OSTYPE}" == "msys" ]; then
+		GMPABI="ABI=32"
+	else
+		GMPABI=
+	fi
+	echo "Build GMP with ${GMPABI}"
+	../configure ${GMPABI} --prefix=${CORTEX_TOPDIR}/static --enable-cxx --enable-fft --enable-mpbsd \
+	--disable-shared --enable-static 2>&1 | tee configure.log
 	make -j${NUM_JOBS} 2>&1 | tee make.log
+	make check 2>&1 | tee makecheck.log
 	make install 2>&1 | tee makeinstall.log
 	cd ${CORTEX_TOPDIR}
 	touch .libgmp
@@ -222,6 +267,21 @@ if [ ! -f .libmpfr ]; then
 	make install 2>&1 | tee makeinstall.log
 	cd ${CORTEX_TOPDIR}
 	touch .libmpfr
+fi
+
+echo "Build MPC"
+cd ${CORTEX_TOPDIR}
+if [ ! -f .libmpc ]; then
+	rm -rf mpc-${MPC_VER}
+	tar xfz ${DOWNLOAD_DIR}/mpc-${MPC_VER}.tar.gz
+	cd mpc-${MPC_VER}
+	mkdir build
+	cd build
+	../configure --prefix=${CORTEX_TOPDIR}/static --with-gmp=${CORTEX_TOPDIR}/static --with-mpfr=${CORTEX_TOPDIR}/static --disable-shared --enable-static
+	make -j${NUM_JOBS} 2>&1 | tee make.log
+	make install 2>&1 | tee makeinstall.log
+	cd ${CORTEX_TOPDIR}
+	touch .libmpc
 fi
 
 echo "Build PPL"
@@ -249,26 +309,15 @@ if [ ! -f .libcloog ]; then
 	mkdir build
 	cd build
 #	../configure --prefix=${HOME} --with-gmp=${HOME} --with-ppl=${HOME} 2>&1 | tee configure.log
-	../configure --prefix=${CORTEX_TOPDIR}/static --with-gmp=${CORTEX_TOPDIR}/static --with-ppl=${CORTEX_TOPDIR}/static --with-bits=gmp --disable-shared --enable-static --with-host-libstdcxx="-lstdc++"
+	../configure --prefix=${CORTEX_TOPDIR}/static --with-gmp=${CORTEX_TOPDIR}/static \
+	--with-ppl=${CORTEX_TOPDIR}/static --with-bits=gmp --disable-shared --enable-static \
+	--with-host-libstdcxx="-lstdc++" \
+	2>&1 | tee configure.log
+#	--without-cloog		sembra non esistere nonostante sia nominato nella documentazione (vedi README)
 	make -j${NUM_JOBS} 2>&1 | tee make.log
 	make install 2>&1 | tee makeinstall.log
 	cd ${CORTEX_TOPDIR}
 	touch .libcloog
-fi
-
-echo "Build MPC"
-cd ${CORTEX_TOPDIR}
-if [ ! -f .libmpc ]; then
-	rm -rf mpc-${MPC_VER}
-	tar xfz ${DOWNLOAD_DIR}/mpc-${MPC_VER}.tar.gz
-	cd mpc-${MPC_VER}
-	mkdir build
-	cd build
-	../configure --prefix=${CORTEX_TOPDIR}/static --with-gmp=${CORTEX_TOPDIR}/static --with-mpfr=${CORTEX_TOPDIR}/static --disable-shared --enable-static
-	make -j${NUM_JOBS} 2>&1 | tee make.log
-	make install 2>&1 | tee makeinstall.log
-	cd ${CORTEX_TOPDIR}
-	touch .libmpc
 fi
 
 echo ".Done"
@@ -280,6 +329,7 @@ if [ ! -f .binutils ]; then
 	tar xfj ${DOWNLOAD_DIR}/binutils-${BINUTILS_VER}.tar.bz2
 #	patch -p0 <binutils.patch	#necessario solo per binutils 2.20
 	cd binutils-${BINUTILS_VER}
+	patch -p0 < ../binutils-svc.patch	#necessario per binutils 2.21
 
 	# hack: allow autoconf version 2.65 instead of 2.64
 	sed -i 's@\(.*_GCC_AUTOCONF_VERSION.*\)2.64\(.*\)@\12.65\2@' config/override.m4
@@ -331,8 +381,8 @@ if [ ! -f .gcc ]; then
 	../configure --target=${TOOLCHAIN_TARGET} --prefix=${TOOLCHAIN_PATH} \
 	--with-cpu=cortex-m3 --with-mode=thumb --enable-interwork --disable-multilib \
 	--enable-languages="c,c++" --with-newlib --without-headers \
-	--disable-shared --with-gnu-as --with-gnu-ld \
-	--enable-stage1-checking=all --enable-lto \
+	--disable-shared --with-gnu-as --with-gnu-ld --with-dwarf2 \
+	--enable-stage1-checking=all --enable-lto --disable-libgomp \
 	--disable-nls --with-host-libstdcxx='-lstdc++' \
 	--with-tune=cortex-m3 --with-float=soft --disable-__cxa_atexit \
 	--with-gmp=${CORTEX_TOPDIR}/static --with-mpfr=${CORTEX_TOPDIR}/static --with-mpc=${CORTEX_TOPDIR}/static \
@@ -340,6 +390,11 @@ if [ ! -f .gcc ]; then
 	2>&1 | tee configure.log
 
 #	--enable-target-optspace
+
+#Yagarto gcc configure
+# --disable-threads --with-gcc \
+# --with-headers=../newlib-$NEWLIB_VER/newlib/libc/include \
+# --disable-libssp --disable-libstdcxx-pch --disable-libmudflap \
 
 	make -j${NUM_JOBS} all-gcc 2>&1 | tee make.log
 	make install-gcc 2>&1 | tee install.log
@@ -400,7 +455,13 @@ if [ ! -f .gdb ]; then
 	cd gdb-${GDB_VER}
 	mkdir build
 	cd build
-	../configure --target=${TOOLCHAIN_TARGET} --prefix=${TOOLCHAIN_PATH} --enable-werror
+	../configure --target=${TOOLCHAIN_TARGET} --prefix=${TOOLCHAIN_PATH} \
+	--enable-werror --enable-stage1-checking=all --enable-lto \
+	--with-host-libstdcxx='-lstdc++' --disable-nls \
+	--with-gmp=${CORTEX_TOPDIR}/static --with-mpfr=${CORTEX_TOPDIR}/static --with-mpc=${CORTEX_TOPDIR}/static \
+	--with-libelf=${CORTEX_TOPDIR}/static --with-ppl=${CORTEX_TOPDIR}/static --with-cloog=${CORTEX_TOPDIR}/static \
+	--with-libexpat-prefix=${CORTEX_TOPDIR}/static \
+	2>&1 | tee configure.log
 	make -j${NUM_JOBS} 2>&1 | tee make.log
 	make install 2>&1 | tee install.log
 	cd ${CORTEX_TOPDIR}
@@ -424,35 +485,18 @@ fi
 #	touch .insight
 #fi
 
+cd ${CORTEX_TOPDIR}
 echo "Done. Stripping binaries..."
-cd ${TOOLCHAIN_PATH}/libexec/gcc/arm-lancos-eabi/${GCC_VER}
-strip cc1
-strip cc1plus
-
-cd ${TOOLCHAIN_PATH}/bin
-strip arm-lancos-eabi-addr2line
-strip arm-lancos-eabi-ar
-strip arm-lancos-eabi-as
-strip arm-lancos-eabi-c++
-strip arm-lancos-eabi-c++filt
-strip arm-lancos-eabi-cpp
-strip arm-lancos-eabi-g++
-strip arm-lancos-eabi-gcc
-strip arm-lancos-eabi-gcc-${GCC_VER}
-strip arm-lancos-eabi-gcov
-strip arm-lancos-eabi-gdb
-strip arm-lancos-eabi-gdbtui
-strip arm-lancos-eabi-gprof
-strip arm-lancos-eabi-ld
-strip arm-lancos-eabi-nm
-strip arm-lancos-eabi-objcopy
-strip arm-lancos-eabi-objdump
-strip arm-lancos-eabi-ranlib
-strip arm-lancos-eabi-readelf
-strip arm-lancos-eabi-run
-strip arm-lancos-eabi-size
-strip arm-lancos-eabi-strings
-strip arm-lancos-eabi-strip
+for f in \
+	${TOOLCHAIN_PATH}/bin/* \
+	${TOOLCHAIN_PATH}/${TOOLCHAIN_TARGET}/bin/* \
+	${TOOLCHAIN_PATH}/libexec/gcc/${TOOLCHAIN_TARGET}/${GCC_VER}/*
+do
+	if [ `file -b --mime-type ${f}` == "application/x-executable" ]; then
+		echo "Stripping ${f}"
+		strip ${f}
+	fi
+done
 
 cd ${CORTEX_TOPDIR}
 if [ ! -f .targz ]; then
