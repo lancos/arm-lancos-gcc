@@ -1,13 +1,13 @@
 #!/bin/bash
 #
-# $Id: build-gcc-arm.sh,v 1.27.2.6 2011/07/15 12:29:49 claudio Exp $
+# $Id: build-gcc-arm.sh,v 1.28 2011/07/15 13:47:30 claudio Exp $
 #
 # @brief Build cross compiler for ARM Cortex M3 processor
 # 
 # Builds a bare-metal cross GNU toolchain targetting the ARM Cortex M3
 # microprocessor in EABI mode and using the newlib embedded C library.
 #
-# @version $Revision: 1.27.2.6 $
+# @version $Revision: 1.28 $
 # @author  Claudio Lanconelli
 # @note This script was tested on a Ubuntu Linux 8.04 (x86 32/64bit) and
 #       Ubuntu 9.04 but with GCC 4.2.4 (newer version seems to rise some errors)
@@ -207,7 +207,7 @@ if [ ! -f .libexpat ]; then
 	mkdir build
 	cd build
 	../configure --prefix=${CORTEX_TOPDIR}/static --disable-shared \
-	2>&1 | tee configure.log
+		2>&1 | tee configure.log
 	make buildlib -j${NUM_JOBS} 2>&1 | tee make.log
 	make installlib 2>&1 | tee install.log
 	cd ${CORTEX_TOPDIR}
@@ -222,8 +222,8 @@ if [ ! -f .libelf ]; then
 	cd libelf-${LIBELF_VER}
 	mkdir build
 	cd build
-#	../configure --prefix=${HOME} --enable-extended-format 2>&1 | tee configure.log
-	../configure --prefix=${CORTEX_TOPDIR}/static --disable-shared --enable-extended-format 2>&1 | tee configure.log
+	../configure --prefix=${CORTEX_TOPDIR}/static --disable-shared --enable-extended-format \
+		2>&1 | tee configure.log
 	make -j${NUM_JOBS} 2>&1 | tee make.log
 	make install 2>&1 | tee makeinstall.log
 	cd ${CORTEX_TOPDIR}
@@ -246,7 +246,7 @@ if [ ! -f .libgmp ]; then
 	fi
 	echo "Build GMP with ${GMPABI}"
 	../configure ${GMPABI} --prefix=${CORTEX_TOPDIR}/static --enable-cxx --enable-fft --enable-mpbsd \
-	--disable-shared --enable-static 2>&1 | tee configure.log
+		--disable-shared --enable-static 2>&1 | tee configure.log
 	make -j${NUM_JOBS} 2>&1 | tee make.log
 	make check 2>&1 | tee makecheck.log
 	make install 2>&1 | tee makeinstall.log
@@ -262,7 +262,8 @@ if [ ! -f .libmpfr ]; then
 	cd mpfr-${MPFR_VER}
 	mkdir build
 	cd build
-	../configure --prefix=${CORTEX_TOPDIR}/static --with-gmp=${CORTEX_TOPDIR}/static --enable-thread-safe --disable-shared --enable-static
+	../configure --prefix=${CORTEX_TOPDIR}/static --with-gmp=${CORTEX_TOPDIR}/static --enable-thread-safe \
+		--disable-shared --enable-static 2>&1 | tee configure.log
 	make -j${NUM_JOBS} 2>&1 | tee make.log
 	make install 2>&1 | tee makeinstall.log
 	cd ${CORTEX_TOPDIR}
@@ -277,7 +278,8 @@ if [ ! -f .libmpc ]; then
 	cd mpc-${MPC_VER}
 	mkdir build
 	cd build
-	../configure --prefix=${CORTEX_TOPDIR}/static --with-gmp=${CORTEX_TOPDIR}/static --with-mpfr=${CORTEX_TOPDIR}/static --disable-shared --enable-static
+	../configure --prefix=${CORTEX_TOPDIR}/static --with-gmp=${CORTEX_TOPDIR}/static --with-mpfr=${CORTEX_TOPDIR}/static \
+		--disable-shared --enable-static 2>&1 | tee configure.log
 	make -j${NUM_JOBS} 2>&1 | tee make.log
 	make install 2>&1 | tee makeinstall.log
 	cd ${CORTEX_TOPDIR}
@@ -292,8 +294,10 @@ if [ ! -f .libppl ]; then
 	cd ppl-${PPL_VER}
 	mkdir build
 	cd build
-#	../configure --prefix=${HOME} --with-libgmp-prefix=${HOME} --with-libgmpxx-prefix=${HOME} 2>&1 | tee configure.log
-	../configure --prefix=${CORTEX_TOPDIR}/static --with-libgmp-prefix=${CORTEX_TOPDIR}/static --with-libgmpxx-prefix=${CORTEX_TOPDIR}/static --disable-debugging --disable-assertions --disable-ppl_lcdd --disable-ppl_lpsol --disable-shared --enable-static
+	../configure --prefix=${CORTEX_TOPDIR}/static --with-libgmp-prefix=${CORTEX_TOPDIR}/static \
+		--with-libgmpxx-prefix=${CORTEX_TOPDIR}/static --disable-debugging --disable-assertions \
+		--disable-ppl_lcdd --disable-ppl_lpsol \
+		--disable-shared --enable-static 2>&1 | tee configure.log
 	make -j${NUM_JOBS} 2>&1 | tee make.log
 	make install 2>&1 | tee makeinstall.log
 	cd ${CORTEX_TOPDIR}
@@ -308,11 +312,9 @@ if [ ! -f .libcloog ]; then
 	cd cloog-ppl-${CLOOGPPL_VER}
 	mkdir build
 	cd build
-#	../configure --prefix=${HOME} --with-gmp=${HOME} --with-ppl=${HOME} 2>&1 | tee configure.log
 	../configure --prefix=${CORTEX_TOPDIR}/static --with-gmp=${CORTEX_TOPDIR}/static \
-	--with-ppl=${CORTEX_TOPDIR}/static --with-bits=gmp --disable-shared --enable-static \
-	--with-host-libstdcxx="-lstdc++" \
-	2>&1 | tee configure.log
+		--with-ppl=${CORTEX_TOPDIR}/static --with-bits=gmp --with-host-libstdcxx='-lstdc++' \
+		--disable-shared --enable-static 2>&1 | tee configure.log
 #	--without-cloog		sembra non esistere nonostante sia nominato nella documentazione (vedi README)
 	make -j${NUM_JOBS} 2>&1 | tee make.log
 	make install 2>&1 | tee makeinstall.log
@@ -336,11 +338,11 @@ if [ ! -f .binutils ]; then
 	autoconf
 	mkdir build
 	cd build
-	../configure --target=${TOOLCHAIN_TARGET} --prefix=${TOOLCHAIN_PATH} \
-	--enable-interwork --disable-multilib --with-gnu-as --with-gnu-ld --disable-nls --with-float=soft\
-	--with-gmp=${CORTEX_TOPDIR}/static --with-mpfr=${CORTEX_TOPDIR}/static --with-mpc=${CORTEX_TOPDIR}/static \
-	--with-ppl=${CORTEX_TOPDIR}/static --with-cloog=${CORTEX_TOPDIR}/static \
-	2>&1 | tee configure.log
+	../configure --target=${TOOLCHAIN_TARGET} --prefix=${TOOLCHAIN_PATH} --disable-shared \
+		--enable-interwork --disable-multilib --with-gnu-as --with-gnu-ld --disable-nls --with-float=soft \
+		--with-gmp=${CORTEX_TOPDIR}/static --with-mpfr=${CORTEX_TOPDIR}/static --with-mpc=${CORTEX_TOPDIR}/static \
+		--with-ppl=${CORTEX_TOPDIR}/static --with-cloog=${CORTEX_TOPDIR}/static \
+		2>&1 | tee configure.log
 
 #	--with-gmp= --with-mpfr= --with-float=soft --with-sysroot=
 	make -j${NUM_JOBS} all 2>&1 | tee make.log
@@ -379,15 +381,15 @@ if [ ! -f .gcc ]; then
 	mkdir build
 	cd build
 	../configure --target=${TOOLCHAIN_TARGET} --prefix=${TOOLCHAIN_PATH} \
-	--with-cpu=cortex-m3 --with-mode=thumb --enable-interwork --disable-multilib \
-	--enable-languages="c,c++" --with-newlib --without-headers \
-	--disable-shared --with-gnu-as --with-gnu-ld --with-dwarf2 \
-	--enable-stage1-checking=all --enable-lto --disable-libgomp \
-	--disable-nls --with-host-libstdcxx='-lstdc++' \
-	--with-tune=cortex-m3 --with-float=soft --disable-__cxa_atexit \
-	--with-gmp=${CORTEX_TOPDIR}/static --with-mpfr=${CORTEX_TOPDIR}/static --with-mpc=${CORTEX_TOPDIR}/static \
-	--with-libelf=${CORTEX_TOPDIR}/static --with-ppl=${CORTEX_TOPDIR}/static --with-cloog=${CORTEX_TOPDIR}/static \
-	2>&1 | tee configure.log
+		--with-cpu=cortex-m3 --with-mode=thumb --enable-interwork --disable-multilib \
+		--enable-languages="c,c++" --with-newlib --without-headers \
+		--disable-shared --with-gnu-as --with-gnu-ld --with-dwarf2 \
+		--enable-stage1-checking=all --enable-lto --disable-libgomp --disable-libssp \
+		--disable-nls --with-host-libstdcxx='-lstdc++' \
+		--with-tune=cortex-m3 --with-float=soft --disable-__cxa_atexit \
+		--with-gmp=${CORTEX_TOPDIR}/static --with-mpfr=${CORTEX_TOPDIR}/static --with-mpc=${CORTEX_TOPDIR}/static \
+		--with-libelf=${CORTEX_TOPDIR}/static --with-ppl=${CORTEX_TOPDIR}/static --with-cloog=${CORTEX_TOPDIR}/static \
+		2>&1 | tee configure.log
 
 #	--enable-target-optspace
 
@@ -427,10 +429,9 @@ if [ ! -f .newlib ]; then
 	cd build
 	#note: this needs arm-*-{eabi|elf}-cc to exist or link to arm-*-{eabi|elf}-gcc
 	../configure --target=${TOOLCHAIN_TARGET} --prefix=${TOOLCHAIN_PATH} \
-	--enable-interwork --disable-multilib --enable-target-optspace --disable-nls --with-gnu-as --with-gnu-ld --disable-newlib-supplied-syscalls \
-	--enable-newlib-elix-level=1 --disable-newlib-io-float --disable-newlib-atexit-dynamic-alloc --enable-newlib-reent-small --disable-shared \
-	--enable-newlib-multithread \
-	2>&1 | tee configure.log
+		--enable-interwork --disable-multilib --enable-target-optspace --disable-nls --with-gnu-as --with-gnu-ld --disable-newlib-supplied-syscalls \
+		--enable-newlib-elix-level=1 --disable-newlib-io-float --disable-newlib-atexit-dynamic-alloc --enable-newlib-reent-small --disable-shared \
+		--enable-newlib-multithread 2>&1 | tee configure.log
 	make -j${NUM_JOBS} CFLAGS_FOR_TARGET="-DREENTRANT_SYSCALLS_PROVIDED -DSMALL_MEMORY -DHAVE_ASSERT_FUNC" 2>&1 | tee make.log
 	make install 2>&1 | tee install.log
 	cd ${CORTEX_TOPDIR}
@@ -456,12 +457,12 @@ if [ ! -f .gdb ]; then
 	mkdir build
 	cd build
 	../configure --target=${TOOLCHAIN_TARGET} --prefix=${TOOLCHAIN_PATH} \
-	--enable-werror --enable-stage1-checking=all --enable-lto \
-	--with-host-libstdcxx='-lstdc++' --disable-nls \
-	--with-gmp=${CORTEX_TOPDIR}/static --with-mpfr=${CORTEX_TOPDIR}/static --with-mpc=${CORTEX_TOPDIR}/static \
-	--with-libelf=${CORTEX_TOPDIR}/static --with-ppl=${CORTEX_TOPDIR}/static --with-cloog=${CORTEX_TOPDIR}/static \
-	--with-libexpat-prefix=${CORTEX_TOPDIR}/static \
-	2>&1 | tee configure.log
+		--enable-werror --enable-stage1-checking=all --enable-lto \
+		--with-host-libstdcxx='-lstdc++' --disable-nls --disable-shared \
+		--with-gmp=${CORTEX_TOPDIR}/static --with-mpfr=${CORTEX_TOPDIR}/static --with-mpc=${CORTEX_TOPDIR}/static \
+		--with-libelf=${CORTEX_TOPDIR}/static --with-ppl=${CORTEX_TOPDIR}/static --with-cloog=${CORTEX_TOPDIR}/static \
+		--with-libexpat-prefix=${CORTEX_TOPDIR}/static \
+		2>&1 | tee configure.log
 	make -j${NUM_JOBS} 2>&1 | tee make.log
 	make install 2>&1 | tee install.log
 	cd ${CORTEX_TOPDIR}
