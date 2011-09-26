@@ -1,13 +1,13 @@
 #!/bin/bash
 #
-# $Id: build-gcc-arm.sh,v 1.28 2011/07/15 13:47:30 claudio Exp $
+# $Id: build-gcc-arm.sh,v 1.29 2011/09/23 14:54:34 claudio Exp $
 #
 # @brief Build cross compiler for ARM Cortex M3 processor
 # 
 # Builds a bare-metal cross GNU toolchain targetting the ARM Cortex M3
 # microprocessor in EABI mode and using the newlib embedded C library.
 #
-# @version $Revision: 1.28 $
+# @version $Revision: 1.29 $
 # @author  Claudio Lanconelli
 # @note This script was tested on a Ubuntu Linux 8.04 (x86 32/64bit) and
 #       Ubuntu 9.04 but with GCC 4.2.4 (newer version seems to rise some errors)
@@ -49,13 +49,13 @@ echo "gcc utilizzato: $CC"
 DOWNLOAD_DIR=${CORTEX_TOPDIR}/downloads
 
 BINUTILS_VER=2.21.1
-GDB_VER=7.2
-GCC_VER=4.5.3
+GDB_VER=7.3.1
+GCC_VER=4.6.1
 #GMP_VER=5.0.1 performance <--> 4.3.2 stable
 GMP_VER=4.3.2
 MPFR_VER=2.4.2
 MPC_VER=0.8.2
-PPL_VER=0.10.2
+PPL_VER=0.11.2
 CLOOGPPL_VER=0.15.11
 NEWLIB_VER=1.19.0
 #INSIGHT_VER=6.8-1
@@ -296,9 +296,11 @@ if [ ! -f .libppl ]; then
 	cd build
 	../configure --prefix=${CORTEX_TOPDIR}/static --with-libgmp-prefix=${CORTEX_TOPDIR}/static \
 		--with-libgmpxx-prefix=${CORTEX_TOPDIR}/static --disable-debugging --disable-assertions \
-		--disable-ppl_lcdd --disable-ppl_lpsol \
+		--disable-ppl_lcdd --disable-ppl_lpsol --with-host-libstdcxx='-lstdc++' --disable-watchdog \
 		--disable-shared --enable-static 2>&1 | tee configure.log
 	make -j${NUM_JOBS} 2>&1 | tee make.log
+	#Il make check richiede MOLTO tempo
+#	make -j${NUM_JOBS} check 2>&1 | tee makecheck.log
 	make install 2>&1 | tee makeinstall.log
 	cd ${CORTEX_TOPDIR}
 	touch .libppl
@@ -501,10 +503,10 @@ done
 
 cd ${CORTEX_TOPDIR}
 if [ ! -f .targz ]; then
-	echo "Done. Build TAR GZ package..."
+	echo "Done. Build TAR BZ2 package..."
 	cd ${TOOLCHAIN_PATH}/..
 	tar cfj ${TOOLCHAIN_NAME}.tar.bz2 ${TOOLCHAIN_NAME}
-	echo "TAR GZ Done"
+	echo "TAR BZ2 Done"
 	cd ${CORTEX_TOPDIR}
 	touch .targz
 fi
