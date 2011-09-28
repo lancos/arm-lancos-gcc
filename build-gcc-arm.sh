@@ -1,13 +1,13 @@
 #!/bin/bash
 #
-# $Id: build-gcc-arm.sh,v 1.29 2011/09/23 14:54:34 claudio Exp $
+# $Id: build-gcc-arm.sh,v 1.30 2011/09/26 15:31:28 claudio Exp $
 #
 # @brief Build cross compiler for ARM Cortex M3 processor
 # 
 # Builds a bare-metal cross GNU toolchain targetting the ARM Cortex M3
 # microprocessor in EABI mode and using the newlib embedded C library.
 #
-# @version $Revision: 1.29 $
+# @version $Revision: 1.30 $
 # @author  Claudio Lanconelli
 # @note This script was tested on a Ubuntu Linux 8.04 (x86 32/64bit) and
 #       Ubuntu 9.04 but with GCC 4.2.4 (newer version seems to rise some errors)
@@ -192,7 +192,7 @@ fi
 #Vista MinGW workaround (da Yagarto)
 echo "${OSTYPE}"
 if [ "${OSTYPE}" == "msys" ]; then
-	export CFLAGS=-D__USE_MINGW_ACCESS
+	export CFLAGS="-D__USE_MINGW_ACCESS -pipe"
 fi
 
 echo "Start building static libs..."
