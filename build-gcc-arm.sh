@@ -1,13 +1,13 @@
 #!/bin/bash
 #
-# $Id: build-gcc-arm.sh,v 1.30 2011/09/26 15:31:28 claudio Exp $
+# $Id: build-gcc-arm.sh,v 1.31 2011/09/28 10:03:48 claudio Exp $
 #
 # @brief Build cross compiler for ARM Cortex M3 processor
 # 
 # Builds a bare-metal cross GNU toolchain targetting the ARM Cortex M3
 # microprocessor in EABI mode and using the newlib embedded C library.
 #
-# @version $Revision: 1.30 $
+# @version $Revision: 1.31 $
 # @author  Claudio Lanconelli
 # @note This script was tested on a Ubuntu Linux 8.04 (x86 32/64bit) and
 #       Ubuntu 9.04 but with GCC 4.2.4 (newer version seems to rise some errors)
@@ -395,6 +395,11 @@ if [ ! -f .gcc ]; then
 
 #	--enable-target-optspace
 
+#	--with-system-zlib
+#	--without-included-gettext
+#	--enable-checking=release
+#	--enable-version-specific-runtime-libs
+
 #Yagarto gcc configure
 # --disable-threads --with-gcc \
 # --with-headers=../newlib-$NEWLIB_VER/newlib/libc/include \
@@ -431,10 +436,14 @@ if [ ! -f .newlib ]; then
 	cd build
 	#note: this needs arm-*-{eabi|elf}-cc to exist or link to arm-*-{eabi|elf}-gcc
 	../configure --target=${TOOLCHAIN_TARGET} --prefix=${TOOLCHAIN_PATH} \
-		--enable-interwork --disable-multilib --enable-target-optspace --disable-nls --with-gnu-as --with-gnu-ld --disable-newlib-supplied-syscalls \
-		--enable-newlib-elix-level=1 --disable-newlib-io-float --disable-newlib-atexit-dynamic-alloc --enable-newlib-reent-small --disable-shared \
-		--enable-newlib-multithread 2>&1 | tee configure.log
-	make -j${NUM_JOBS} CFLAGS_FOR_TARGET="-DREENTRANT_SYSCALLS_PROVIDED -DSMALL_MEMORY -DHAVE_ASSERT_FUNC" 2>&1 | tee make.log
+		--enable-interwork --disable-multilib --enable-target-optspace --disable-newlib-supplied-syscalls \
+		--enable-newlib-elix-level=1 --disable-newlib-io-float --disable-newlib-atexit-dynamic-alloc --enable-newlib-reent-small \
+		--enable-newlib-multithread --enable-newlib-iconv --enable-newlib-mb \
+		--disable-shared --disable-nls --with-gnu-as --with-gnu-ld --enable-lto \
+		--with-gmp=${CORTEX_TOPDIR}/static --with-mpfr=${CORTEX_TOPDIR}/static --with-mpc=${CORTEX_TOPDIR}/static \
+		--with-libelf=${CORTEX_TOPDIR}/static --with-ppl=${CORTEX_TOPDIR}/static --with-cloog=${CORTEX_TOPDIR}/static \
+		2>&1 | tee configure.log
+	make -j${NUM_JOBS} CFLAGS_FOR_TARGET="-DREENTRANT_SYSCALLS_PROVIDED -DSMALL_MEMORY -DHAVE_ASSERT_FUNC -D__BUFSIZ__=256" 2>&1 | tee make.log
 	make install 2>&1 | tee install.log
 	cd ${CORTEX_TOPDIR}
 	touch .newlib
