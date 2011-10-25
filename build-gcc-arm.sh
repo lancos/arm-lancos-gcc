@@ -1,13 +1,13 @@
 #!/bin/bash
 #
-# $Id: build-gcc-arm.sh,v 1.31 2011/09/28 10:03:48 claudio Exp $
+# $Id: build-gcc-arm.sh,v 1.32 2011/10/24 23:22:17 claudio Exp $
 #
 # @brief Build cross compiler for ARM Cortex M3 processor
 # 
 # Builds a bare-metal cross GNU toolchain targetting the ARM Cortex M3
 # microprocessor in EABI mode and using the newlib embedded C library.
 #
-# @version $Revision: 1.31 $
+# @version $Revision: 1.32 $
 # @author  Claudio Lanconelli
 # @note This script was tested on a Ubuntu Linux 8.04 (x86 32/64bit) and
 #       Ubuntu 9.04 but with GCC 4.2.4 (newer version seems to rise some errors)
@@ -385,7 +385,7 @@ if [ ! -f .gcc ]; then
 	../configure --target=${TOOLCHAIN_TARGET} --prefix=${TOOLCHAIN_PATH} \
 		--with-cpu=cortex-m3 --with-mode=thumb --enable-interwork --disable-multilib \
 		--enable-languages="c,c++" --with-newlib --without-headers \
-		--disable-shared --with-gnu-as --with-gnu-ld --with-dwarf2 \
+		--disable-shared --with-gnu-as --with-gnu-ld --with-dwarf2 --enable-initfini-array \
 		--enable-stage1-checking=all --enable-lto --disable-libgomp --disable-libssp \
 		--disable-nls --with-host-libstdcxx='-lstdc++' \
 		--with-tune=cortex-m3 --with-float=soft --disable-__cxa_atexit \
@@ -395,8 +395,7 @@ if [ ! -f .gcc ]; then
 
 #	--enable-target-optspace
 
-#	--with-system-zlib
-#	--without-included-gettext
+#	--without-included-gettext ??
 #	--enable-checking=release
 #	--enable-version-specific-runtime-libs
 
@@ -427,6 +426,7 @@ if [ ! -f .newlib ]; then
 	rm -rf newlib-${NEWLIB_VER}
 	tar xfz ${DOWNLOAD_DIR}/newlib-${NEWLIB_VER}.tar.gz
 	patch -p0 <newlib_mktime.diff
+	patch -p0 <newlib_iconv_ccs.patch
 	cd newlib-${NEWLIB_VER}
 
 	# hack: allow autoconf version 2.65 instead of 2.64
