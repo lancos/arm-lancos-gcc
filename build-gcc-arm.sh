@@ -1,13 +1,13 @@
 #!/bin/bash
 #
-# $Id: build-gcc-arm.sh,v 1.32 2011/10/24 23:22:17 claudio Exp $
+# $Id: build-gcc-arm.sh,v 1.33 2011/10/25 11:08:50 claudio Exp $
 #
 # @brief Build cross compiler for ARM Cortex M3 processor
 # 
 # Builds a bare-metal cross GNU toolchain targetting the ARM Cortex M3
 # microprocessor in EABI mode and using the newlib embedded C library.
 #
-# @version $Revision: 1.32 $
+# @version $Revision: 1.33 $
 # @author  Claudio Lanconelli
 # @note This script was tested on a Ubuntu Linux 8.04 (x86 32/64bit) and
 #       Ubuntu 9.04 but with GCC 4.2.4 (newer version seems to rise some errors)
@@ -438,11 +438,15 @@ if [ ! -f .newlib ]; then
 	../configure --target=${TOOLCHAIN_TARGET} --prefix=${TOOLCHAIN_PATH} \
 		--enable-interwork --disable-multilib --enable-target-optspace --disable-newlib-supplied-syscalls \
 		--enable-newlib-elix-level=1 --disable-newlib-io-float --disable-newlib-atexit-dynamic-alloc --enable-newlib-reent-small \
-		--enable-newlib-multithread --enable-newlib-iconv --enable-newlib-mb \
+		--enable-newlib-multithread \
 		--disable-shared --disable-nls --with-gnu-as --with-gnu-ld --enable-lto \
 		--with-gmp=${CORTEX_TOPDIR}/static --with-mpfr=${CORTEX_TOPDIR}/static --with-mpc=${CORTEX_TOPDIR}/static \
 		--with-libelf=${CORTEX_TOPDIR}/static --with-ppl=${CORTEX_TOPDIR}/static --with-cloog=${CORTEX_TOPDIR}/static \
 		2>&1 | tee configure.log
+
+# Aggiungere per abilitare supporto alle stringhe multi-byte (wide-char)
+#	--enable-newlib-iconv --enable-newlib-mb
+
 	make -j${NUM_JOBS} CFLAGS_FOR_TARGET="-DREENTRANT_SYSCALLS_PROVIDED -DSMALL_MEMORY -DHAVE_ASSERT_FUNC -D__BUFSIZ__=256" 2>&1 | tee make.log
 	make install 2>&1 | tee install.log
 	cd ${CORTEX_TOPDIR}
