@@ -1,13 +1,13 @@
 #!/bin/bash
 #
-# $Id: build-gcc-arm.sh,v 1.35 2011/11/03 23:23:18 claudio Exp $
+# $Id: build-gcc-arm.sh,v 1.36 2011/11/15 11:49:37 claudio Exp $
 #
 # @brief Build cross compiler for ARM Cortex M3 processor
 # 
 # Builds a bare-metal cross GNU toolchain targetting the ARM Cortex M3
 # microprocessor in EABI mode and using the newlib embedded C library.
 #
-# @version $Revision: 1.35 $
+# @version $Revision: 1.36 $
 # @author  Claudio Lanconelli
 # @note This script was tested on a Ubuntu Linux 8.04 (x86 32/64bit) and
 #       Ubuntu 9.04 but with GCC 4.2.4 (newer version seems to rise some errors)
@@ -78,13 +78,6 @@ TOOLCHAIN_PATH=${HOME}/${TOOLCHAIN_NAME}
 
 #Prefix del toolchain che stiamo costruendo
 TOOLCHAIN_TARGET=arm-lancos-eabi
-
-#Numero di compilazioni concorrenti (consigliabile 2+ per un dual-core o 4+ per un quad-core)
-NUM_JOBS=`getconf _NPROCESSORS_ONLN`
-if [ "z$NUM_JOBS" == "z" ]; then
-	NUM_JOBS=2
-fi
-echo "Build with $NUM_JOBS parallel jobs"
 
 mkdir -p ${TOOLCHAIN_PATH}
 
@@ -197,7 +190,15 @@ fi
 echo "${OSTYPE}"
 if [ "${OSTYPE}" == "msys" ]; then
 	export CFLAGS="-D__USE_MINGW_ACCESS -pipe"
+else
+	#Numero di compilazioni concorrenti (consigliabile 2+ per un dual-core o 4+ per un quad-core)
+	NUM_JOBS=`getconf _NPROCESSORS_ONLN`
 fi
+
+if [ "z$NUM_JOBS" == "z" ]; then
+	NUM_JOBS=2
+fi
+echo "Build with $NUM_JOBS parallel jobs"
 
 echo "Start building static libs..."
 mkdir -p ${CORTEX_TOPDIR}/static
