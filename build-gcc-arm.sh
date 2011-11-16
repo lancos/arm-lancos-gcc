@@ -1,13 +1,13 @@
 #!/bin/bash
 #
-# $Id: build-gcc-arm.sh,v 1.36 2011/11/15 11:49:37 claudio Exp $
+# $Id: build-gcc-arm.sh,v 1.37 2011/11/16 15:22:10 claudio Exp $
 #
 # @brief Build cross compiler for ARM Cortex M3 processor
 # 
 # Builds a bare-metal cross GNU toolchain targetting the ARM Cortex M3
 # microprocessor in EABI mode and using the newlib embedded C library.
 #
-# @version $Revision: 1.36 $
+# @version $Revision: 1.37 $
 # @author  Claudio Lanconelli
 # @note This script was tested on a Ubuntu Linux 8.04 (x86 32/64bit) and
 #       Ubuntu 9.04 but with GCC 4.2.4 (newer version seems to rise some errors)
@@ -61,6 +61,19 @@ NEWLIB_VER=1.19.0
 #INSIGHT_VER=6.8-1
 LIBELF_VER=0.8.13
 EXPAT_VER=2.0.1
+
+AUTOCONF_VERMIN=2.64
+AUTOCONF_VERSION=`autoconf --version | head -n 1 | cut -d' ' -f4`
+
+AUTOCONF_VER_INT=`echo "scale=1; ${AUTOCONF_VERSION}*100.0" | bc | cut -d'.' -f 1`
+AUTOCONF_VERMIN_INT=`echo "scale=1; ${AUTOCONF_VERMIN}*100.0" | bc | cut -d'.' -f 1`
+
+if [ ${AUTOCONF_VERMIN_INT} -gt ${AUTOCONF_VER_INT} ]; then
+	echo "!  Autoconf version = ${AUTOCONF_VERSION} (${AUTOCONF_VER_INT}), Required = ${AUTOCONF_VERMIN} (${AUTOCONF_VERMIN_INT})"
+	exit 1
+else
+	echo "Ok Autoconf version = ${AUTOCONF_VERSION} (${AUTOCONF_VER_INT}), Required = ${AUTOCONF_VERMIN} (${AUTOCONF_VERMIN_INT})"
+fi
 
 #Snapshots releases
 #BINUTILS_VER=2.20.51
@@ -340,8 +353,10 @@ if [ ! -f .binutils ]; then
 	cd binutils-${BINUTILS_VER}
 	patch -p0 < ../binutils-svc.patch	#necessario per binutils 2.21
 
-	# hack: allow autoconf version 2.65 instead of 2.64
-	sed -i 's@\(.*_GCC_AUTOCONF_VERSION.*\)2.64\(.*\)@\12.65\2@' config/override.m4
+	if [ ${AUTOCONF_VERMIN} != ${AUTOCONF_VERSION} ]; then
+		# hack: allow autoconf version 2.65 instead of 2.64
+		sed -i "s@\(.*_GCC_AUTOCONF_VERSION.*\)${AUTOCONF_VERMIN}\(.*\)@\1${AUTOCONF_VERSION}\2@" config/override.m4
+	fi
 	autoconf
 	mkdir build
 	cd build
@@ -381,8 +396,10 @@ if [ ! -f .gcc ]; then
 	#autoconf
 	#cd ..
 
-	# hack: allow autoconf version 2.65 instead of 2.64
-	sed -i 's@\(.*_GCC_AUTOCONF_VERSION.*\)2.64\(.*\)@\12.65\2@' config/override.m4
+	if [ ${AUTOCONF_VERMIN} != ${AUTOCONF_VERSION} ]; then
+		# hack: allow autoconf version 2.65 instead of 2.64
+		sed -i "s@\(.*_GCC_AUTOCONF_VERSION.*\)${AUTOCONF_VERMIN}\(.*\)@\1${AUTOCONF_VERSION}\2@" config/override.m4
+	fi
 	autoconf
 
 	mkdir build
@@ -434,8 +451,10 @@ if [ ! -f .newlib ]; then
 	patch -p0 <newlib_iconv_ccs.patch
 	cd newlib-${NEWLIB_VER}
 
-	# hack: allow autoconf version 2.65 instead of 2.64
-	sed -i 's@\(.*_GCC_AUTOCONF_VERSION.*\)2.64\(.*\)@\12.65\2@' config/override.m4
+	if [ ${AUTOCONF_VERMIN} != ${AUTOCONF_VERSION} ]; then
+		# hack: allow autoconf version 2.65 instead of 2.64
+		sed -i "s@\(.*_GCC_AUTOCONF_VERSION.*\)${AUTOCONF_VERMIN}\(.*\)@\1${AUTOCONF_VERSION}\2@" config/override.m4
+	fi
 	autoconf
 	mkdir build
 	cd build
