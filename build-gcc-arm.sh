@@ -1,13 +1,13 @@
 #!/bin/bash
 #
-# $Id: build-gcc-arm.sh,v 1.37 2011/11/16 15:22:10 claudio Exp $
+# $Id: build-gcc-arm.sh,v 1.38 2011/11/16 16:58:46 claudio Exp $
 #
 # @brief Build cross compiler for ARM Cortex M3 processor
 # 
 # Builds a bare-metal cross GNU toolchain targetting the ARM Cortex M3
 # microprocessor in EABI mode and using the newlib embedded C library.
 #
-# @version $Revision: 1.37 $
+# @version $Revision: 1.38 $
 # @author  Claudio Lanconelli
 # @note This script was tested on a Ubuntu Linux 8.04 (x86 32/64bit) and
 #       Ubuntu 9.04 but with GCC 4.2.4 (newer version seems to rise some errors)
@@ -57,7 +57,7 @@ MPFR_VER=3.1.0
 MPC_VER=0.9
 PPL_VER=0.11.2
 CLOOGPPL_VER=0.15.11
-NEWLIB_VER=1.19.0
+NEWLIB_VER=1.20.0
 #INSIGHT_VER=6.8-1
 LIBELF_VER=0.8.13
 EXPAT_VER=2.0.1
@@ -447,8 +447,8 @@ if [ ! -f .newlib ]; then
 
 	rm -rf newlib-${NEWLIB_VER}
 	tar xfz ${DOWNLOAD_DIR}/newlib-${NEWLIB_VER}.tar.gz
-	patch -p0 <newlib_mktime.diff
-	patch -p0 <newlib_iconv_ccs.patch
+#	patch -p0 <newlib_mktime.diff
+#	patch -p0 <newlib_iconv_ccs.patch
 	cd newlib-${NEWLIB_VER}
 
 	if [ ${AUTOCONF_VERMIN} != ${AUTOCONF_VERSION} ]; then
