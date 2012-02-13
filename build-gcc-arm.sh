@@ -1,13 +1,13 @@
 #!/bin/bash
 #
-# $Id: build-gcc-arm.sh,v 1.38 2011/11/16 16:58:46 claudio Exp $
+# $Id: build-gcc-arm.sh,v 1.39 2011/12/21 16:40:05 claudio Exp $
 #
 # @brief Build cross compiler for ARM Cortex M3 processor
 # 
 # Builds a bare-metal cross GNU toolchain targetting the ARM Cortex M3
 # microprocessor in EABI mode and using the newlib embedded C library.
 #
-# @version $Revision: 1.38 $
+# @version $Revision: 1.39 $
 # @author  Claudio Lanconelli
 # @note This script was tested on a Ubuntu Linux 8.04 (x86 32/64bit) and
 #       Ubuntu 9.04 but with GCC 4.2.4 (newer version seems to rise some errors)
@@ -48,8 +48,8 @@ echo "gcc utilizzato: $CC"
 
 DOWNLOAD_DIR=${CORTEX_TOPDIR}/downloads
 
-BINUTILS_VER=2.21.1
-GDB_VER=7.3.1
+BINUTILS_VER=2.22
+GDB_VER=7.4
 GCC_VER=4.6.2
 #GMP_VER=5.0.2 performance <--> 4.3.2 stable
 GMP_VER=5.0.2
@@ -351,7 +351,7 @@ if [ ! -f .binutils ]; then
 	tar xfj ${DOWNLOAD_DIR}/binutils-${BINUTILS_VER}.tar.bz2
 #	patch -p0 <binutils.patch	#necessario solo per binutils 2.20
 	cd binutils-${BINUTILS_VER}
-	patch -p0 < ../binutils-svc.patch	#necessario per binutils 2.21
+#	patch -p0 < ../binutils-svc.patch	#necessario per binutils 2.21
 
 	if [ ${AUTOCONF_VERMIN} != ${AUTOCONF_VERSION} ]; then
 		# hack: allow autoconf version 2.65 instead of 2.64
