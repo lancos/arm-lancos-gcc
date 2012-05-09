@@ -1,13 +1,13 @@
 #!/bin/bash
 #
-# $Id: build-gcc-arm.sh,v 1.39 2011/12/21 16:40:05 claudio Exp $
+# $Id: build-gcc-arm.sh,v 1.40 2012/02/13 09:54:07 claudio Exp $
 #
 # @brief Build cross compiler for ARM Cortex M3 processor
 # 
 # Builds a bare-metal cross GNU toolchain targetting the ARM Cortex M3
 # microprocessor in EABI mode and using the newlib embedded C library.
 #
-# @version $Revision: 1.39 $
+# @version $Revision: 1.40 $
 # @author  Claudio Lanconelli
 # @note This script was tested on a Ubuntu Linux 8.04 (x86 32/64bit) and
 #       Ubuntu 9.04 but with GCC 4.2.4 (newer version seems to rise some errors)
@@ -50,12 +50,12 @@ DOWNLOAD_DIR=${CORTEX_TOPDIR}/downloads
 
 BINUTILS_VER=2.22
 GDB_VER=7.4
-GCC_VER=4.6.2
+GCC_VER=4.6.3
 #GMP_VER=5.0.2 performance <--> 4.3.2 stable
-GMP_VER=5.0.2
+GMP_VER=5.0.4
 MPFR_VER=3.1.0
 MPC_VER=0.9
-PPL_VER=0.11.2
+PPL_VER=0.12.1
 CLOOGPPL_VER=0.15.11
 NEWLIB_VER=1.20.0
 #INSIGHT_VER=6.8-1
@@ -312,13 +312,13 @@ if [ ! -f .libppl ]; then
 	cd ppl-${PPL_VER}
 	mkdir build
 	cd build
-	../configure --prefix=${CORTEX_TOPDIR}/static --with-libgmp-prefix=${CORTEX_TOPDIR}/static \
-		--with-libgmpxx-prefix=${CORTEX_TOPDIR}/static --disable-debugging --disable-assertions \
-		--disable-ppl_lcdd --disable-ppl_lpsol --with-host-libstdcxx='-lstdc++' --disable-watchdog \
+	../configure --prefix=${CORTEX_TOPDIR}/static --with-gmp=${CORTEX_TOPDIR}/static \
+		--disable-debugging --disable-assertions --disable-documentation \
+		--disable-ppl_lcdd --disable-ppl_lpsol --disable-ppl_pips \
 		--disable-shared --enable-static 2>&1 | tee configure.log
 	make -j${NUM_JOBS} 2>&1 | tee make.log
 	#Il make check richiede MOLTO tempo
-#	make -j${NUM_JOBS} check 2>&1 | tee makecheck.log
+	make -j${NUM_JOBS} check 2>&1 | tee makecheck.log
 	make install 2>&1 | tee makeinstall.log
 	cd ${CORTEX_TOPDIR}
 	touch .libppl
