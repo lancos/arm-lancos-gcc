@@ -1,0 +1,29 @@
+--- newlib-1.20.0/newlib/libc/string/Makefile.in	2011-03-28 16:51:28.000000000 +0200
++++ ok_newlib-1.20.0/newlib/libc/string/Makefile.in	2012-09-14 10:07:19.786642984 +0200
+@@ -88,7 +88,7 @@
+ 	lib_a-wcsxfrm.$(OBJEXT) lib_a-wcwidth.$(OBJEXT) \
+ 	lib_a-wmemchr.$(OBJEXT) lib_a-wmemcmp.$(OBJEXT) \
+ 	lib_a-wmemcpy.$(OBJEXT) lib_a-wmemmove.$(OBJEXT) \
+-	lib_a-wmemset.$(OBJEXT) lib_a-xpg_strerror_r.$(OBJEXT)
++	lib_a-wmemset.$(OBJEXT) lib_a-xpg_strerror_r.$(OBJEXT) lib_a-stpcpy.$(OBJEXT) lib_a-stpncpy.$(OBJEXT)
+ @ELIX_LEVEL_1_FALSE@am__objects_2 = lib_a-bcmp.$(OBJEXT) \
+ @ELIX_LEVEL_1_FALSE@	lib_a-memccpy.$(OBJEXT) \
+ @ELIX_LEVEL_1_FALSE@	lib_a-mempcpy.$(OBJEXT) \
+@@ -121,7 +121,7 @@
+ 	wcslcpy.lo wcslen.lo wcsncat.lo wcsncmp.lo wcsncpy.lo \
+ 	wcsnlen.lo wcspbrk.lo wcsrchr.lo wcsspn.lo wcsstr.lo wcstok.lo \
+ 	wcswidth.lo wcsxfrm.lo wcwidth.lo wmemchr.lo wmemcmp.lo \
+-	wmemcpy.lo wmemmove.lo wmemset.lo xpg_strerror_r.lo
++	wmemcpy.lo wmemmove.lo wmemset.lo xpg_strerror_r.lo stpcpy.lo stpncpy.lo
+ @ELIX_LEVEL_1_FALSE@am__objects_5 = bcmp.lo memccpy.lo mempcpy.lo \
+ @ELIX_LEVEL_1_FALSE@	stpcpy.lo stpncpy.lo strndup.lo \
+ @ELIX_LEVEL_1_FALSE@	strcasestr.lo strchrnul.lo strndup_r.lo \
+@@ -366,7 +366,7 @@
+ 	wmemcpy.c \
+ 	wmemmove.c \
+ 	wmemset.c \
+-	xpg_strerror_r.c
++	xpg_strerror_r.c stpcpy.c stpncpy.c
+ 
+ @ELIX_LEVEL_1_FALSE@ELIX_2_SOURCES = \
+ @ELIX_LEVEL_1_FALSE@	bcmp.c \
