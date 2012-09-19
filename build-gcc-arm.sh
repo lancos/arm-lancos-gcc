@@ -1,13 +1,13 @@
 #!/bin/bash
 #
-# $Id: build-gcc-arm.sh,v 1.43 2012/06/20 10:15:43 claudio Exp $
+# $Id: build-gcc-arm.sh,v 1.44 2012/09/14 10:12:24 claudio Exp $
 #
 # @brief Build cross compiler for ARM Cortex M3 processor
 # 
 # Builds a bare-metal cross GNU toolchain targetting the ARM Cortex M3
 # microprocessor in EABI mode and using the newlib embedded C library.
 #
-# @version $Revision: 1.43 $
+# @version $Revision: 1.44 $
 # @author  Claudio Lanconelli
 # @note This script was tested on a Ubuntu Linux 8.04 (x86 32/64bit) and
 #       Ubuntu 9.04 but with GCC 4.2.4 (newer version seems to rise some errors)
@@ -408,7 +408,7 @@ if [ ! -f .gcc ]; then
 		--with-cpu=cortex-m3 --with-mode=thumb --enable-interwork --disable-multilib \
 		--enable-languages="c,c++" --with-newlib --without-headers \
 		--disable-shared --with-gnu-as --with-gnu-ld --with-dwarf2 --enable-initfini-array \
-		--enable-stage1-checking=all --enable-lto --disable-libgomp --disable-libssp \
+		--enable-stage1-checking=all --enable-lto --disable-libgomp --disable-libssp --disable-libstdcxx-pch --disable-libmudflap \
 		--disable-nls --with-host-libstdcxx='-lstdc++' \
 		--with-tune=cortex-m3 --with-float=soft --disable-__cxa_atexit \
 		--with-gmp=${CORTEX_TOPDIR}/static --with-mpfr=${CORTEX_TOPDIR}/static --with-mpc=${CORTEX_TOPDIR}/static \
@@ -416,7 +416,7 @@ if [ ! -f .gcc ]; then
 		2>&1 | tee configure.log
 
 #	--enable-target-optspace
-
+#	--with-cpu=cortex-m3 --with-mode=thumb --with-tune=cortex-m3 --with-float=soft
 #	--without-included-gettext ??
 #	--enable-checking=release
 #	--enable-version-specific-runtime-libs
@@ -462,7 +462,7 @@ if [ ! -f .newlib ]; then
 	#note: this needs arm-*-{eabi|elf}-cc to exist or link to arm-*-{eabi|elf}-gcc
 	../configure --target=${TOOLCHAIN_TARGET} --prefix=${TOOLCHAIN_PATH} \
 		--enable-interwork --disable-multilib --enable-target-optspace --disable-newlib-supplied-syscalls \
-		--enable-newlib-elix-level=1 --disable-newlib-io-float --disable-newlib-atexit-dynamic-alloc --enable-newlib-reent-small \
+		--enable-newlib-elix-level=1 --enable-newlib-io-float --disable-newlib-atexit-dynamic-alloc --enable-newlib-reent-small \
 		--enable-newlib-multithread \
 		--disable-shared --disable-nls --with-gnu-as --with-gnu-ld --enable-lto \
 		--with-gmp=${CORTEX_TOPDIR}/static --with-mpfr=${CORTEX_TOPDIR}/static --with-mpc=${CORTEX_TOPDIR}/static \
@@ -497,7 +497,7 @@ if [ ! -f .gdb ]; then
 	mkdir build
 	cd build
 	../configure --target=${TOOLCHAIN_TARGET} --prefix=${TOOLCHAIN_PATH} \
-		--enable-werror --enable-stage1-checking=all --enable-lto \
+		--enable-werror --enable-stage1-checking=all --enable-lto --disable-multilib \
 		--with-host-libstdcxx='-lstdc++' --disable-nls --disable-shared \
 		--with-gmp=${CORTEX_TOPDIR}/static --with-mpfr=${CORTEX_TOPDIR}/static --with-mpc=${CORTEX_TOPDIR}/static \
 		--with-libelf=${CORTEX_TOPDIR}/static --with-ppl=${CORTEX_TOPDIR}/static --with-cloog=${CORTEX_TOPDIR}/static \
