@@ -1,13 +1,13 @@
 #!/bin/bash
 #
-# $Id: build-gcc-arm.sh,v 1.44 2012/09/14 10:12:24 claudio Exp $
+# $Id: build-gcc-arm.sh,v 1.45 2012/09/19 16:52:17 claudio Exp $
 #
 # @brief Build cross compiler for ARM Cortex M3 processor
 # 
 # Builds a bare-metal cross GNU toolchain targetting the ARM Cortex M3
 # microprocessor in EABI mode and using the newlib embedded C library.
 #
-# @version $Revision: 1.44 $
+# @version $Revision: 1.45 $
 # @author  Claudio Lanconelli
 # @note This script was tested on a Ubuntu Linux 8.04 (x86 32/64bit) and
 #       Ubuntu 9.04 but with GCC 4.2.4 (newer version seems to rise some errors)
@@ -330,6 +330,7 @@ if [ ! -f .libcloog ]; then
 	rm -rf cloog-ppl-${CLOOGPPL_VER}
 	tar xfz ${DOWNLOAD_DIR}/cloog-ppl-${CLOOGPPL_VER}.tar.gz
 	cd cloog-ppl-${CLOOGPPL_VER}
+	patch -p0 < ../cloog_configure_ppl_version.patch
 	mkdir build
 	cd build
 	../configure --prefix=${CORTEX_TOPDIR}/static --with-gmp=${CORTEX_TOPDIR}/static \
@@ -337,6 +338,7 @@ if [ ! -f .libcloog ]; then
 		--disable-shared --enable-static 2>&1 | tee configure.log
 #	--without-cloog		sembra non esistere nonostante sia nominato nella documentazione (vedi README)
 	make -j${NUM_JOBS} 2>&1 | tee make.log
+	make -j${NUM_JOBS} check 2>&1 | tee makecheck.log
 	make install 2>&1 | tee makeinstall.log
 	cd ${CORTEX_TOPDIR}
 	touch .libcloog
@@ -349,7 +351,6 @@ cd ${CORTEX_TOPDIR}
 if [ ! -f .binutils ]; then
 	rm -rf binutils-${BINUTILS_VER}
 	tar xfj ${DOWNLOAD_DIR}/binutils-${BINUTILS_VER}.tar.bz2
-#	patch -p0 <binutils.patch	#necessario solo per binutils 2.20
 	cd binutils-${BINUTILS_VER}
 #	patch -p0 < ../binutils-svc.patch	#necessario per binutils 2.21
 
