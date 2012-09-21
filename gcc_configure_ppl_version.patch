@@ -1,0 +1,11 @@
+--- configure.ori	2012-09-21 10:47:25.230340757 +0200
++++ configure	2012-09-21 10:47:44.698340063 +0200
+@@ -5690,7 +5690,7 @@
+ main ()
+ {
+ 
+-    #if PPL_VERSION_MAJOR != 0 || PPL_VERSION_MINOR < 11
++    #if PPL_VERSION_MAJOR == 0 && PPL_VERSION_MINOR < 11
+     choke me
+     #endif
+ 

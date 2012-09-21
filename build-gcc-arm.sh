@@ -1,13 +1,13 @@
 #!/bin/bash
 #
-# $Id: build-gcc-arm.sh,v 1.45 2012/09/19 16:52:17 claudio Exp $
+# $Id: build-gcc-arm.sh,v 1.46 2012/09/21 08:17:53 claudio Exp $
 #
 # @brief Build cross compiler for ARM Cortex M3 processor
 # 
 # Builds a bare-metal cross GNU toolchain targetting the ARM Cortex M3
 # microprocessor in EABI mode and using the newlib embedded C library.
 #
-# @version $Revision: 1.45 $
+# @version $Revision: 1.46 $
 # @author  Claudio Lanconelli
 # @note This script was tested on a Ubuntu Linux 8.04 (x86 32/64bit) and
 #       Ubuntu 9.04 but with GCC 4.2.4 (newer version seems to rise some errors)
@@ -353,6 +353,7 @@ if [ ! -f .binutils ]; then
 	tar xfj ${DOWNLOAD_DIR}/binutils-${BINUTILS_VER}.tar.bz2
 	cd binutils-${BINUTILS_VER}
 #	patch -p0 < ../binutils-svc.patch	#necessario per binutils 2.21
+	patch -p0 < ../binutils_configure_ppl_version.patch
 
 	if [ ${AUTOCONF_VERMIN} != ${AUTOCONF_VERSION} ]; then
 		# hack: allow autoconf version 2.65 instead of 2.64
@@ -382,8 +383,8 @@ cd ${CORTEX_TOPDIR}
 if [ ! -f .gcc ]; then
 	rm -rf gcc-${GCC_VER}
 	tar xfj ${DOWNLOAD_DIR}/gcc-${GCC_VER}.tar.bz2
-#	patch -p0 <gcc.patch
 	cd gcc-${GCC_VER}
+	patch -p0 < ../gcc_configure_ppl_version.patch
 #	tar xfj ${DOWNLOAD_DIR}/gmp-${GMP_VER}.tar.bz2
 #	tar xfj ${DOWNLOAD_DIR}/mpfr-${MPFR_VER}.tar.bz2
 #	tar xfz ${DOWNLOAD_DIR}/mpc-${MPC_VER}.tar.gz
