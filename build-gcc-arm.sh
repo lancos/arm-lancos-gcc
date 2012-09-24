@@ -1,13 +1,13 @@
 #!/bin/bash
 #
-# $Id: build-gcc-arm.sh,v 1.46 2012/09/21 08:17:53 claudio Exp $
+# $Id: build-gcc-arm.sh,v 1.47 2012/09/21 08:50:41 claudio Exp $
 #
 # @brief Build cross compiler for ARM Cortex M3 processor
 # 
 # Builds a bare-metal cross GNU toolchain targetting the ARM Cortex M3
 # microprocessor in EABI mode and using the newlib embedded C library.
 #
-# @version $Revision: 1.46 $
+# @version $Revision: 1.47 $
 # @author  Claudio Lanconelli
 # @note This script was tested on a Ubuntu Linux 8.04 (x86 32/64bit) and
 #       Ubuntu 9.04 but with GCC 4.2.4 (newer version seems to rise some errors)
@@ -55,7 +55,7 @@ GCC_VER=4.7.1
 GMP_VER=5.0.4
 MPFR_VER=3.1.0
 MPC_VER=0.9
-PPL_VER=0.12.1
+PPL_VER=1.0
 CLOOGPPL_VER=0.15.11
 NEWLIB_VER=1.20.0
 #INSIGHT_VER=6.8-1
@@ -203,6 +203,7 @@ fi
 echo "${OSTYPE}"
 if [ "${OSTYPE}" == "msys" ]; then
 	export CFLAGS="-D__USE_MINGW_ACCESS -pipe"
+	NUM_JOBS=1
 else
 	#Numero di compilazioni concorrenti (consigliabile 2+ per un dual-core o 4+ per un quad-core)
 	NUM_JOBS=`getconf _NPROCESSORS_ONLN`
@@ -453,6 +454,7 @@ if [ ! -f .newlib ]; then
 #	patch -p0 <newlib_iconv_ccs.patch
 	patch -p0 <newlib_stpcpy.patch
 	cd newlib-${NEWLIB_VER}
+	patch -p0 < ../newlib_configure_ppl_version.patch
 
 	if [ ${AUTOCONF_VERMIN} != ${AUTOCONF_VERSION} ]; then
 		# hack: allow autoconf version 2.65 instead of 2.64
@@ -496,6 +498,7 @@ if [ ! -f .gdb ]; then
 	rm -rf gdb-${GDB_VER}
 	tar xfj ${DOWNLOAD_DIR}/gdb-${GDB_VER}.tar.bz2
 	cd gdb-${GDB_VER}
+	patch -p0 < ../gdb_configure_ppl_version.patch
 	mkdir build
 	cd build
 	../configure --target=${TOOLCHAIN_TARGET} --prefix=${TOOLCHAIN_PATH} \
