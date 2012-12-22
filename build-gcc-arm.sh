@@ -1,13 +1,13 @@
 #!/bin/bash
 #
-# $Id: build-gcc-arm.sh,v 1.48 2012/09/24 08:45:40 claudio Exp $
+# $Id: build-gcc-arm.sh,v 1.49 2012/09/25 10:29:34 claudio Exp $
 #
 # @brief Build cross compiler for ARM Cortex M3 processor
 # 
 # Builds a bare-metal cross GNU toolchain targetting the ARM Cortex M3
 # microprocessor in EABI mode and using the newlib embedded C library.
 #
-# @version $Revision: 1.48 $
+# @version $Revision: 1.49 $
 # @author  Claudio Lanconelli
 # @note This script was tested on a Ubuntu Linux 8.04 (x86 32/64bit) and
 #       Ubuntu 9.04 but with GCC 4.2.4 (newer version seems to rise some errors)
@@ -48,16 +48,16 @@ echo "gcc utilizzato: $CC"
 
 DOWNLOAD_DIR=${CORTEX_TOPDIR}/downloads
 
-BINUTILS_VER=2.22
-GDB_VER=7.5
+BINUTILS_VER=2.23.1
+GDB_VER=7.5.1
 GCC_VER=4.7.2
 #GMP_VER=5.0.2 performance <--> 4.3.2 stable
-GMP_VER=5.0.4
+GMP_VER=5.0.5
 MPFR_VER=3.1.0
-MPC_VER=0.9
+MPC_VER=1.0.1
 PPL_VER=1.0
 CLOOGPPL_VER=0.15.11
-NEWLIB_VER=1.20.0
+NEWLIB_VER=2.0.0
 #INSIGHT_VER=6.8-1
 LIBELF_VER=0.8.13
 EXPAT_VER=2.0.1
@@ -138,8 +138,8 @@ else
 	GCC_PATH=http://ftp.gnu.org/pub/gnu/gcc/gcc-${GCC_VER}
 	#GCC_PATH=ftp://sourceware.org/pub/gcc/releases/gcc-${GCC_VER}
 
-	NEWLIB_PATH=ftp://sources.redhat.com/pub/newlib
-	#NEWLIB_PATH=ftp://sourceware.org/pub/newlib
+	#NEWLIB_PATH=ftp://sources.redhat.com/pub/newlib
+	NEWLIB_PATH=ftp://sourceware.org/pub/newlib
 
 	GMP_PATH=http://ftp.gnu.org/pub/gnu/gmp
 	MPFR_PATH=http://www.mpfr.org/mpfr-current
@@ -452,9 +452,9 @@ if [ ! -f .newlib ]; then
 	tar xfz ${DOWNLOAD_DIR}/newlib-${NEWLIB_VER}.tar.gz
 #	patch -p0 <newlib_mktime.diff
 #	patch -p0 <newlib_iconv_ccs.patch
-	patch -p0 <newlib_stpcpy.patch
 	cd newlib-${NEWLIB_VER}
-	patch -p0 < ../newlib_configure_ppl_version.patch
+	patch -p0 < ../newlib_stpcpy.patch
+#	patch -p0 < ../newlib_configure_ppl_version.patch
 
 	if [ ${AUTOCONF_VERMIN} != ${AUTOCONF_VERSION} ]; then
 		# hack: allow autoconf version 2.65 instead of 2.64
