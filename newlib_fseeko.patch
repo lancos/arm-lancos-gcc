@@ -1,0 +1,45 @@
+--- newlib/libc/stdio/Makefile.in	2012-12-20 22:10:06.000000000 +0100
++++ newlib/libc/stdio/new_Makefile.in	2013-08-30 15:52:07.074039141 +0200
+@@ -110,12 +110,10 @@
+ 	lib_a-vsiscanf.$(OBJEXT) lib_a-vsnprintf.$(OBJEXT) \
+ 	lib_a-vsniprintf.$(OBJEXT) lib_a-vsprintf.$(OBJEXT) \
+ 	lib_a-vsscanf.$(OBJEXT) lib_a-wbuf.$(OBJEXT) \
+-	lib_a-wsetup.$(OBJEXT)
++	lib_a-wsetup.$(OBJEXT) lib_a-fseeko.$(OBJEXT) lib_a-ftello.$(OBJEXT)
+ @ELIX_LEVEL_1_FALSE@am__objects_2 = lib_a-asiprintf.$(OBJEXT) \
+ @ELIX_LEVEL_1_FALSE@	lib_a-asprintf.$(OBJEXT) \
+ @ELIX_LEVEL_1_FALSE@	lib_a-fcloseall.$(OBJEXT) \
+-@ELIX_LEVEL_1_FALSE@	lib_a-fseeko.$(OBJEXT) \
+-@ELIX_LEVEL_1_FALSE@	lib_a-ftello.$(OBJEXT) \
+ @ELIX_LEVEL_1_FALSE@	lib_a-getw.$(OBJEXT) \
+ @ELIX_LEVEL_1_FALSE@	lib_a-mktemp.$(OBJEXT) \
+ @ELIX_LEVEL_1_FALSE@	lib_a-putw.$(OBJEXT) \
+@@ -171,9 +169,9 @@
+ 	tmpfile.lo tmpnam.lo ungetc.lo vdiprintf.lo vdprintf.lo \
+ 	viprintf.lo viscanf.lo vprintf.lo vscanf.lo vsiprintf.lo \
+ 	vsiscanf.lo vsnprintf.lo vsniprintf.lo vsprintf.lo vsscanf.lo \
+-	wbuf.lo wsetup.lo
++	wbuf.lo wsetup.lo fseeko.lo ftello.lo
+ @ELIX_LEVEL_1_FALSE@am__objects_5 = asiprintf.lo asprintf.lo \
+-@ELIX_LEVEL_1_FALSE@	fcloseall.lo fseeko.lo ftello.lo getw.lo \
++@ELIX_LEVEL_1_FALSE@	fcloseall.lo getw.lo \
+ @ELIX_LEVEL_1_FALSE@	mktemp.lo putw.lo vasiprintf.lo \
+ @ELIX_LEVEL_1_FALSE@	vasprintf.lo
+ @ELIX_LEVEL_1_FALSE@@ELIX_LEVEL_2_FALSE@@ELIX_LEVEL_3_FALSE@am__objects_6 = asniprintf.lo \
+@@ -461,14 +459,14 @@
+ 	vsprintf.c			\
+ 	vsscanf.c			\
+ 	wbuf.c				\
++	fseeko.c			\
++	ftello.c			\
+ 	wsetup.c
+ 
+ @ELIX_LEVEL_1_FALSE@ELIX_2_SOURCES = \
+ @ELIX_LEVEL_1_FALSE@	asiprintf.c		\
+ @ELIX_LEVEL_1_FALSE@	asprintf.c		\
+ @ELIX_LEVEL_1_FALSE@	fcloseall.c		\
+-@ELIX_LEVEL_1_FALSE@	fseeko.c		\
+-@ELIX_LEVEL_1_FALSE@	ftello.c		\
+ @ELIX_LEVEL_1_FALSE@	getw.c			\
+ @ELIX_LEVEL_1_FALSE@	mktemp.c		\
+ @ELIX_LEVEL_1_FALSE@	putw.c			\
