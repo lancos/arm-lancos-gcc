@@ -1,13 +1,13 @@
 #!/bin/bash
 #
-# $Id: build-gcc-arm.sh,v 1.51 2013/05/30 09:10:16 claudio Exp $
+# $Id: build-gcc-arm.sh,v 1.52 2013/08/30 14:37:08 claudio Exp $
 #
 # @brief Build cross compiler for ARM Cortex M3 processor
 # 
 # Builds a bare-metal cross GNU toolchain targetting the ARM Cortex M3
 # microprocessor in EABI mode and using the newlib embedded C library.
 #
-# @version $Revision: 1.51 $
+# @version $Revision: 1.52 $
 # @author  Claudio Lanconelli
 # @note This script was tested on a Ubuntu Linux 8.04 (x86 32/64bit) and
 #       Ubuntu 9.04 but with GCC 4.2.4 (newer version seems to rise some errors)
@@ -48,15 +48,16 @@ echo "gcc utilizzato: $CC"
 
 DOWNLOAD_DIR=${CORTEX_TOPDIR}/downloads
 
-BINUTILS_VER=2.23.1
-GDB_VER=7.5.1
-GCC_VER=4.7.3
-#GMP_VER=5.0.2 performance <--> 4.3.2 stable
-GMP_VER=5.0.5
-MPFR_VER=3.1.0
+BINUTILS_VER=2.23.2
+GDB_VER=7.6.1
+GCC_VER=4.8.1
+#GMP_VER=5.0.5 performance <--> 4.3.2 stable
+GMP_VER=5.1.2
+MPFR_VER=3.1.2
 MPC_VER=1.0.1
-PPL_VER=1.0
-CLOOGPPL_VER=0.15.11
+#PPL_VER=1.0
+ISL_VER=0.12.1
+CLOOG_VER=0.18.0
 NEWLIB_VER=2.0.0
 #INSIGHT_VER=6.8-1
 LIBELF_VER=0.8.13
@@ -82,7 +83,7 @@ fi
 #INSIGHT_VER=weekly-7.0.50-20091102
 
 TOOLCHAIN_NAME="gcc${GCC_VER}-bu${BINUTILS_VER}-gdb${GDB_VER}-nl${NEWLIB_VER}"
-TOOLCHAINLIB_NAME="gmp${GMP_VER}-mpfr${MPFR_VER}-mpc${MPC_VER}-ppl${PPL_VER}-cloog${CLOOGPPL_VER}-libelf${LIBELF_VER}-expat${EXPAT_VER}"
+TOOLCHAINLIB_NAME="gmp${GMP_VER}-mpfr${MPFR_VER}-mpc${MPC_VER}-cloog${CLOOG_VER}-libelf${LIBELF_VER}-expat${EXPAT_VER}"
 echo "Build toolchain ${TOOLCHAIN_NAME}"
 echo "toolchain libs ${TOOLCHAINLIB_NAME}"
 
@@ -117,8 +118,9 @@ if [ "$1" == "local" ]; then
 	GMP_PATH=${LOCAL_PATH}
 	MPFR_PATH=${LOCAL_PATH}
 	MPC_PATH=${LOCAL_PATH}
+	ISL_PATH=${LOCAL_PATH}
 	PPL_PATH=${LOCAL_PATH}
-	CLOOGPPL_PATH=${LOCAL_PATH}
+	CLOOG_PATH=${LOCAL_PATH}
 	NEWLIB_PATH=${LOCAL_PATH}
 	INSIGHT_PATH=${LOCAL_PATH}
 	LIBELF_PATH=${LOCAL_PATH}
@@ -145,7 +147,8 @@ else
 	MPFR_PATH=http://www.mpfr.org/mpfr-current
 	MPC_PATH=http://www.multiprecision.org/mpc/download
 	PPL_PATH=ftp://ftp.cs.unipr.it/pub/ppl/releases/${PPL_VER}
-	CLOOGPPL_PATH=ftp://gcc.gnu.org/pub/gcc/infrastructure
+	ISL_PATH=http://isl.gforge.inria.fr
+	CLOOG_PATH=ftp://gcc.gnu.org/pub/gcc/infrastructure
 	INSIGHT_PATH=ftp://sourceware.org/pub/insight/releases
 	LIBELF_PATH=http://www.mr511.de/software
 	EXPAT_PATH=http://sourceforge.net/projects/expat/files/expat/${EXPAT_VER}/expat-${EXPAT_VER}.tar.gz
@@ -189,11 +192,14 @@ fi
 if [ ! -f ${DOWNLOAD_DIR}/mpc-${MPC_VER}.tar.gz ]; then
 	wget ${MPC_PATH}/mpc-${MPC_VER}.tar.gz
 fi
-if [ ! -f ${DOWNLOAD_DIR}/ppl-${PPL_VER}.tar.bz2 ]; then
-	wget ${PPL_PATH}/ppl-${PPL_VER}.tar.bz2
-fi
-if [ ! -f ${DOWNLOAD_DIR}/cloog-ppl-${CLOOGPPL_VER}.tar.gz ]; then
-	wget ${CLOOGPPL_PATH}/cloog-ppl-${CLOOGPPL_VER}.tar.gz
+#if [ ! -f ${DOWNLOAD_DIR}/ppl-${PPL_VER}.tar.bz2 ]; then
+#	wget ${PPL_PATH}/ppl-${PPL_VER}.tar.bz2
+#fi
+#if [ ! -f ${DOWNLOAD_DIR}/isl-${ISL_VER}.tar.bz2 ]; then
+#	wget ${ISL_PATH}/isl-${ISL_VER}.tar.bz2
+#fi
+if [ ! -f ${DOWNLOAD_DIR}/cloog-${CLOOG_VER}.tar.gz ]; then
+	wget ${CLOOG_PATH}/cloog-${CLOOG_VER}.tar.gz
 fi
 if [ ! -f ${DOWNLOAD_DIR}/libelf-${LIBELF_VER}.tar.gz ]; then
 	wget ${LIBELF_PATH}/libelf-${LIBELF_VER}.tar.gz
@@ -305,41 +311,64 @@ if [ ! -f .libmpc ]; then
 	touch .libmpc
 fi
 
-echo "Build PPL"
-cd ${CORTEX_TOPDIR}
-if [ ! -f .libppl ]; then
-	rm -rf ppl-${PPL_VER} 
-	tar xfj ${DOWNLOAD_DIR}/ppl-${PPL_VER}.tar.bz2
-	cd ppl-${PPL_VER}
-	mkdir build
-	cd build
-	../configure --prefix=${CORTEX_TOPDIR}/static --with-gmp=${CORTEX_TOPDIR}/static \
-		--disable-debugging --disable-assertions --disable-documentation \
-		--disable-ppl_lcdd --disable-ppl_lpsol --disable-ppl_pips \
-		--disable-shared --enable-static 2>&1 | tee configure.log
-	make -j${NUM_JOBS} 2>&1 | tee make.log
-	#Il make check richiede MOLTO tempo
-	make -j${NUM_JOBS} check 2>&1 | tee makecheck.log
-	make install 2>&1 | tee makeinstall.log
-	cd ${CORTEX_TOPDIR}
-	touch .libppl
-fi
+#echo "Build PPL"
+#cd ${CORTEX_TOPDIR}
+#if [ ! -f .libppl ]; then
+#	rm -rf ppl-${PPL_VER}
+#	tar xfj ${DOWNLOAD_DIR}/ppl-${PPL_VER}.tar.bz2
+#	cd ppl-${PPL_VER}
+#	mkdir build
+#	cd build
+#	../configure --prefix=${CORTEX_TOPDIR}/static --with-gmp=${CORTEX_TOPDIR}/static \
+#		--disable-debugging --disable-assertions --disable-documentation \
+#		--disable-ppl_lcdd --disable-ppl_lpsol --disable-ppl_pips \
+#		--disable-shared --enable-static 2>&1 | tee configure.log
+#	make -j${NUM_JOBS} 2>&1 | tee make.log
+#	#Il make check richiede MOLTO tempo
+#	make -j${NUM_JOBS} check 2>&1 | tee makecheck.log
+#	make install 2>&1 | tee makeinstall.log
+#	cd ${CORTEX_TOPDIR}
+#	touch .libppl
+#fi
+
+#export CFLAGS=-I${CORTEX_TOPDIR}/static/include
+#export LDFLAGS=-L${CORTEX_TOPDIR}/static/lib
+
+#echo "Build ISL"
+#cd ${CORTEX_TOPDIR}
+#if [ ! -f .libisl ]; then
+#	rm -rf isl-${ISL_VER}
+#	tar xfj ${DOWNLOAD_DIR}/isl-${ISL_VER}.tar.bz2
+#	cd isl-${ISL_VER}
+#	mkdir build
+#	cd build
+#	../configure --prefix=${CORTEX_TOPDIR}/static \
+#		--with-gmp=build --with-gmp-builddir=${CORTEX_TOPDIR}/gmp-${GMP_VER}/build \
+#		--disable-shared --enable-static 2>&1 | tee configure.log
+#	make -j${NUM_JOBS} 2>&1 | tee make.log
+#	make check 2>&1 | tee makecheck.log
+#	make install 2>&1 | tee makeinstall.log
+#	cd ${CORTEX_TOPDIR}
+#	touch .libisl
+#fi
 
 echo "Build CLOOG"
 cd ${CORTEX_TOPDIR}
 if [ ! -f .libcloog ]; then
-	rm -rf cloog-ppl-${CLOOGPPL_VER}
-	tar xfz ${DOWNLOAD_DIR}/cloog-ppl-${CLOOGPPL_VER}.tar.gz
-	cd cloog-ppl-${CLOOGPPL_VER}
-	patch -p0 < ../cloog_configure_ppl_version.patch
+	rm -rf cloog-${CLOOG_VER}
+	tar xfz ${DOWNLOAD_DIR}/cloog-${CLOOG_VER}.tar.gz
+	cd cloog-${CLOOG_VER}
+	patch -p1 < ../cloog_islver.patch
 	mkdir build
 	cd build
-	../configure --prefix=${CORTEX_TOPDIR}/static --with-gmp=${CORTEX_TOPDIR}/static \
-		--with-ppl=${CORTEX_TOPDIR}/static --with-bits=gmp --with-host-libstdcxx='-lstdc++' \
+	../configure --prefix=${CORTEX_TOPDIR}/static \
+		--with-gmp=build --with-gmp-builddir=${CORTEX_TOPDIR}/gmp-${GMP_VER}/build \
+		--with-isl=bundled \
 		--disable-shared --enable-static 2>&1 | tee configure.log
-#	--without-cloog		sembra non esistere nonostante sia nominato nella documentazione (vedi README)
+
+#		--with-isl=build --with-isl-builddir=${CORTEX_TOPDIR}/isl-${ISL_VER}/build \
 	make -j${NUM_JOBS} 2>&1 | tee make.log
-	make -j${NUM_JOBS} check 2>&1 | tee makecheck.log
+	make check 2>&1 | tee makecheck.log
 	make install 2>&1 | tee makeinstall.log
 	cd ${CORTEX_TOPDIR}
 	touch .libcloog
@@ -354,7 +383,6 @@ if [ ! -f .binutils ]; then
 	tar xfj ${DOWNLOAD_DIR}/binutils-${BINUTILS_VER}.tar.bz2
 	cd binutils-${BINUTILS_VER}
 #	patch -p0 < ../binutils-svc.patch	#necessario per binutils 2.21
-	patch -p0 < ../binutils_configure_ppl_version.patch
 
 	if [ ${AUTOCONF_VERMIN} != ${AUTOCONF_VERSION} ]; then
 		# hack: allow autoconf version 2.65 instead of 2.64
@@ -366,10 +394,10 @@ if [ ! -f .binutils ]; then
 	../configure --target=${TOOLCHAIN_TARGET} --prefix=${TOOLCHAIN_PATH} --disable-shared \
 		--enable-interwork --disable-multilib --with-gnu-as --with-gnu-ld --disable-nls --with-float=soft \
 		--with-gmp=${CORTEX_TOPDIR}/static --with-mpfr=${CORTEX_TOPDIR}/static --with-mpc=${CORTEX_TOPDIR}/static \
-		--with-ppl=${CORTEX_TOPDIR}/static --with-cloog=${CORTEX_TOPDIR}/static \
 		2>&1 | tee configure.log
 
 #	--with-gmp= --with-mpfr= --with-float=soft --with-sysroot=
+#		--with-ppl=${CORTEX_TOPDIR}/static --with-cloog=${CORTEX_TOPDIR}/static \
 	make -j${NUM_JOBS} all 2>&1 | tee make.log
 	make install 2>&1 | tee install.log
 	cd $CORTEX_TOPDIR
@@ -385,13 +413,6 @@ if [ ! -f .gcc ]; then
 	rm -rf gcc-${GCC_VER}
 	tar xfj ${DOWNLOAD_DIR}/gcc-${GCC_VER}.tar.bz2
 	cd gcc-${GCC_VER}
-	patch -p0 < ../gcc_configure_ppl_version.patch
-#	tar xfj ${DOWNLOAD_DIR}/gmp-${GMP_VER}.tar.bz2
-#	tar xfj ${DOWNLOAD_DIR}/mpfr-${MPFR_VER}.tar.bz2
-#	tar xfz ${DOWNLOAD_DIR}/mpc-${MPC_VER}.tar.gz
-#	ln -snf gmp-${GMP_VER} gmp
-#	ln -snf mpfr-${MPFR_VER} mpfr
-#	ln -snf mpc-${MPC_VER} mpc
 
 	#cd libstdc++-v3
 	## uncomment AC_LIBTOOL_DLOPEN
@@ -415,7 +436,7 @@ if [ ! -f .gcc ]; then
 		--disable-nls --with-host-libstdcxx='-lstdc++' \
 		--with-tune=cortex-m3 --with-float=soft --disable-__cxa_atexit \
 		--with-gmp=${CORTEX_TOPDIR}/static --with-mpfr=${CORTEX_TOPDIR}/static --with-mpc=${CORTEX_TOPDIR}/static \
-		--with-libelf=${CORTEX_TOPDIR}/static --with-ppl=${CORTEX_TOPDIR}/static --with-cloog=${CORTEX_TOPDIR}/static \
+		--with-libelf=${CORTEX_TOPDIR}/static --with-isl=${CORTEX_TOPDIR}/static --with-cloog=${CORTEX_TOPDIR}/static \
 		2>&1 | tee configure.log
 
 #	--enable-target-optspace
@@ -499,7 +520,6 @@ if [ ! -f .gdb ]; then
 	rm -rf gdb-${GDB_VER}
 	tar xfj ${DOWNLOAD_DIR}/gdb-${GDB_VER}.tar.bz2
 	cd gdb-${GDB_VER}
-	patch -p0 < ../gdb_configure_ppl_version.patch
 	mkdir build
 	cd build
 	../configure --target=${TOOLCHAIN_TARGET} --prefix=${TOOLCHAIN_PATH} \
