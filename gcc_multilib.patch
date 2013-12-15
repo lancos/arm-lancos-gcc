@@ -1,19 +1,18 @@
---- gcc-4.7.1/gcc/config/arm/t-arm-elf.ori	2012-09-18 12:40:11.858072893 +0200
-+++ gcc-4.7.1/gcc/config/arm/t-arm-elf	2012-09-18 12:40:11.862072892 +0200
-@@ -19,73 +19,27 @@
+--- gcc/config/arm/t-arm-elf.ori	2013-01-10 21:38:27.000000000 +0100
++++ gcc/config/arm/t-arm-elf	2013-12-15 18:13:13.772149825 +0100
+@@ -16,75 +16,75 @@
+ # along with GCC; see the file COPYING3.  If not see
+ # <http://www.gnu.org/licenses/>.
  
- MULTILIB_OPTIONS     = marm/mthumb
- MULTILIB_DIRNAMES    = arm thumb
+-MULTILIB_OPTIONS     = marm/mthumb
+-MULTILIB_DIRNAMES    = arm thumb
 -MULTILIB_EXCEPTIONS  = 
 -MULTILIB_MATCHES     =
- 
+-
 -#MULTILIB_OPTIONS     += mcpu=fa526/mcpu=fa626/mcpu=fa606te/mcpu=fa626te/mcpu=fmp626/mcpu=fa726te
 -#MULTILIB_DIRNAMES    += fa526 fa626 fa606te fa626te fmp626 fa726te
 -#MULTILIB_EXCEPTIONS  += *mthumb*/*mcpu=fa526 *mthumb*/*mcpu=fa626
-+# Only we don't actually want any ARM libraries.  Or
-+# vanilla thumb libraries.
-+MULTILIB_EXCEPTIONS  = marm* mthumb
- 
+-
 -#MULTILIB_OPTIONS      += march=armv7
 -#MULTILIB_DIRNAMES     += thumb2
 -#MULTILIB_EXCEPTIONS   += march=armv7* marm/*march=armv7*
@@ -23,10 +22,7 @@
 -#MULTILIB_MATCHES      += march?armv7=mcpu?cortex-a8
 -#MULTILIB_MATCHES      += march?armv7=mcpu?cortex-r4
 -#MULTILIB_MATCHES      += march?armv7=mcpu?cortex-m3
-+# Build with any one of arm926, M0, M3 or M4 support.
-+MULTILIB_OPTIONS    += mcpu=arm926ej-s/mcpu=cortex-m0/mcpu=cortex-m3/mcpu=cortex-m4
-+MULTILIB_DIRNAMES   += arm926ej-s cortex-m0 cortex-m3 cortex-m4
- 
+-
 -# Not quite true.  We can support hard-vfp calling in Thumb2, but how do we
 -# express that here?  Also, we really need architecture v5e or later
 -# (mcrr etc).
@@ -35,11 +31,7 @@
 -MULTILIB_EXCEPTIONS    += *mthumb/*mfloat-abi=hard*
 -#MULTILIB_EXCEPTIONS    += *mcpu=fa526/*mfloat-abi=hard*
 -#MULTILIB_EXCEPTIONS    += *mcpu=fa626/*mfloat-abi=hard*
-+# These don't make any sense without thumb, because GCC likes to
-+# tell you that you have to supply another commandline argument
-+# rather than just setting it itself.
-+MULTILIB_EXCEPTIONS += mcpu=arm926ej-s* mcpu=cortex-m0* mcpu=cortex-m3* mcpu=cortex-m4*
- 
+-
 -# MULTILIB_OPTIONS    += mcpu=ep9312
 -# MULTILIB_DIRNAMES   += ep9312
 -# MULTILIB_EXCEPTIONS += *mthumb/*mcpu=ep9312*
@@ -84,13 +76,75 @@
 -# MULTILIB_MATCHES    += mcpu?arm7=mcpu?arm600
 -# MULTILIB_MATCHES    += mcpu?arm7=mcpu?arm610
 -# MULTILIB_MATCHES    += mcpu?arm7=mcpu?arm620
-+# All this just to get mfloat-abi=hard mfpu=fpv4-sp-d16 only specified for the M4
-+MULTILIB_OPTIONS    += mfloat-abi=hard mfpu=fpv4-sp-d16
-+MULTILIB_DIRNAMES   += float-abi-hard fpuv4-sp-d16
-+MULTILIB_EXCEPTIONS += mfloat* mthumb/mfloat*
-+MULTILIB_EXCEPTIONS += mfpu* mthumb/mfpu*
-+MULTILIB_EXCEPTIONS += mthumb/mcpu=cortex-m4/mfloat-abi=hard
-+MULTILIB_EXCEPTIONS += mthumb/mcpu=cortex-m4/mfpu=fpv4-sp-d16
-+MULTILIB_EXCEPTIONS += *arm926ej-s*mfloat-abi* *arm926ej-s*mfpu*
-+MULTILIB_EXCEPTIONS += *cortex-m3*mfloat-abi* *cortex-m3*mfpu*
-+MULTILIB_EXCEPTIONS += *cortex-m0*mfloat-abi* *cortex-m0*mfpu*
++MULTILIB_OPTIONS   = mthumb/marm
++MULTILIB_DIRNAMES  = thumb arm
++MULTILIB_OPTIONS  += march=armv6s-m/march=armv7-m/march=armv7e-m/march=armv7
++MULTILIB_DIRNAMES += armv6-m armv7-m armv7e-m armv7-ar
++MULTILIB_OPTIONS  += mfloat-abi=softfp/mfloat-abi=hard
++MULTILIB_DIRNAMES += softfp fpu
++#MULTILIB_OPTIONS  += mfpu=fpv4-sp-d16/mfpu=vfpv3-d16
++#MULTILIB_DIRNAMES += fpv4-sp-d16 vfpv3-d16
++MULTILIB_OPTIONS  += mfpu=fpv4-sp-d16
++MULTILIB_DIRNAMES += fpv4-sp-d16
++
++MULTILIB_MATCHES   = march?armv6s-m=mcpu?cortex-m0
++MULTILIB_MATCHES  += march?armv6s-m=mcpu?cortex-m0plus
++MULTILIB_MATCHES  += march?armv6s-m=mcpu?cortex-m1
++MULTILIB_MATCHES  += march?armv6s-m=march?armv6-m
++MULTILIB_MATCHES  += march?armv7-m=mcpu?cortex-m3
++MULTILIB_MATCHES  += march?armv7e-m=mcpu?cortex-m4
++MULTILIB_MATCHES  += march?armv7=march?armv7-r
++MULTILIB_MATCHES  += march?armv7=march?armv7-a
++MULTILIB_MATCHES  += march?armv7=mcpu?cortex-r4
++MULTILIB_MATCHES  += march?armv7=mcpu?cortex-r4f
++MULTILIB_MATCHES  += march?armv7=mcpu?cortex-r5
++MULTILIB_MATCHES  += march?armv7=mcpu?cortex-r7
++MULTILIB_MATCHES  += march?armv7=mcpu?cortex-a5
++MULTILIB_MATCHES  += march?armv7=mcpu?cortex-a7
++MULTILIB_MATCHES  += march?armv7=mcpu?cortex-a8
++MULTILIB_MATCHES  += march?armv7=mcpu?cortex-a9
++MULTILIB_MATCHES  += march?armv7=mcpu?cortex-a15
++MULTILIB_MATCHES  += mfpu?vfpv3-d16=mfpu?vfpv3
++MULTILIB_MATCHES  += mfpu?vfpv3-d16=mfpu?vfpv3-fp16
++MULTILIB_MATCHES  += mfpu?vfpv3-d16=mfpu?vfpv3-d16-fp16
++MULTILIB_MATCHES  += mfpu?vfpv3-d16=mfpu?vfpv3xd
++MULTILIB_MATCHES  += mfpu?vfpv3-d16=mfpu?vfpv3xd-fp16
++MULTILIB_MATCHES  += mfpu?vfpv3-d16=mfpu?vfpv4
++MULTILIB_MATCHES  += mfpu?vfpv3-d16=mfpu?vfpv4-d16
++MULTILIB_MATCHES  += mfpu?vfpv3-d16=mfpu?neon
++MULTILIB_MATCHES  += mfpu?vfpv3-d16=mfpu?neon-fp16
++MULTILIB_MATCHES  += mfpu?vfpv3-d16=mfpu?neon-vfpv4
++
++MULTILIB_EXCEPTIONS =
++MULTILIB_REUSE =
++
++MULTILIB_REQUIRED  = mthumb
++#MULTILIB_REQUIRED += marm
++#MULTILIB_REQUIRED += mfloat-abi=hard
++
++MULTILIB_OSDIRNAMES  = mthumb=!thumb
++#MULTILIB_OSDIRNAMES += marm=!arm
++#MULTILIB_OSDIRNAMES += mfloat-abi.hard=!fpu
++
++MULTILIB_REQUIRED   += mthumb/march=armv6s-m
++MULTILIB_OSDIRNAMES += mthumb/march.armv6s-m=!armv6-m
++
++MULTILIB_REQUIRED   += mthumb/march=armv7-m
++MULTILIB_OSDIRNAMES += mthumb/march.armv7-m=!armv7-m
++
++MULTILIB_REQUIRED   += mthumb/march=armv7e-m
++MULTILIB_REQUIRED   += mthumb/march=armv7e-m/mfloat-abi=softfp/mfpu=fpv4-sp-d16
++MULTILIB_REQUIRED   += mthumb/march=armv7e-m/mfloat-abi=hard/mfpu=fpv4-sp-d16
++MULTILIB_OSDIRNAMES += mthumb/march.armv7e-m=!armv7e-m
++MULTILIB_OSDIRNAMES += mthumb/march.armv7e-m/mfloat-abi.hard/mfpu.fpv4-sp-d16=!armv7e-m/fpu
++MULTILIB_OSDIRNAMES += mthumb/march.armv7e-m/mfloat-abi.softfp/mfpu.fpv4-sp-d16=!armv7e-m/softfp
++
++#MULTILIB_REQUIRED   += mthumb/march=armv7
++#MULTILIB_REQUIRED   += mthumb/march=armv7/mfloat-abi=softfp/mfpu=vfpv3-d16
++#MULTILIB_REQUIRED   += mthumb/march=armv7/mfloat-abi=hard/mfpu=vfpv3-d16
++#MULTILIB_OSDIRNAMES += mthumb/march.armv7=!armv7-ar/thumb
++#MULTILIB_OSDIRNAMES += mthumb/march.armv7/mfloat-abi.hard/mfpu.vfpv3-d16=!armv7-ar/thumb/fpu
++#MULTILIB_OSDIRNAMES += mthumb/march.armv7/mfloat-abi.softfp/mfpu.vfpv3-d16=!armv7-ar/thumb/softfp
++#MULTILIB_REUSE      += mthumb/march.armv7=marm/march.armv7
++#MULTILIB_REUSE      += mthumb/march.armv7/mfloat-abi.softfp/mfpu.vfpv3-d16=marm/march.armv7/mfloat-abi.softfp/mfpu.vfpv3-d16
++#MULTILIB_REUSE      += mthumb/march.armv7/mfloat-abi.hard/mfpu.vfpv3-d16=marm/march.armv7/mfloat-abi.hard/mfpu.vfpv3-d16

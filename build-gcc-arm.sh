@@ -1,13 +1,13 @@
 #!/bin/bash
 #
-# $Id: build-gcc-arm.sh,v 1.54 2013/11/12 09:03:03 claudio Exp $
+# $Id: build-gcc-arm.sh,v 1.55 2013/12/13 12:10:52 claudio Exp $
 #
 # @brief Build cross compiler for ARM Cortex M3 processor
 # 
 # Builds a bare-metal cross GNU toolchain targetting the ARM Cortex M3
 # microprocessor in EABI mode and using the newlib embedded C library.
 #
-# @version $Revision: 1.54 $
+# @version $Revision: 1.55 $
 # @author  Claudio Lanconelli
 # @note This script was tested on a Ubuntu Linux 8.04 (x86 32/64bit) and
 #       Ubuntu 9.04 but with GCC 4.2.4 (newer version seems to rise some errors)
@@ -82,7 +82,7 @@ fi
 #GCC_VER=4.5-20091029
 #INSIGHT_VER=weekly-7.0.50-20091102
 
-TOOLCHAIN_NAME="gcc${GCC_VER}-bu${BINUTILS_VER}-gdb${GDB_VER}-nl${NEWLIB_VER}"
+TOOLCHAIN_NAME="gcc${GCC_VER}-bu${BINUTILS_VER}-gdb${GDB_VER}-nl${NEWLIB_VER}-multilib"
 TOOLCHAINLIB_NAME="gmp${GMP_VER}-mpfr${MPFR_VER}-mpc${MPC_VER}-cloog${CLOOG_VER}-libelf${LIBELF_VER}-expat${EXPAT_VER}"
 echo "Build toolchain ${TOOLCHAIN_NAME}"
 echo "toolchain libs ${TOOLCHAINLIB_NAME}"
@@ -392,7 +392,7 @@ if [ ! -f .binutils ]; then
 	mkdir build
 	cd build
 	../configure --target=${TOOLCHAIN_TARGET} --prefix=${TOOLCHAIN_PATH} --disable-shared \
-		--enable-interwork --disable-multilib --with-gnu-as --with-gnu-ld --disable-nls --with-float=soft \
+		--enable-interwork --enable-multilib --with-gnu-as --with-gnu-ld --disable-nls --with-float=soft \
 		--with-gmp=${CORTEX_TOPDIR}/static --with-mpfr=${CORTEX_TOPDIR}/static --with-mpc=${CORTEX_TOPDIR}/static \
 		2>&1 | tee configure.log
 
@@ -413,8 +413,9 @@ if [ ! -f .gcc ]; then
 	rm -rf gcc-${GCC_VER}
 	tar xfj ${DOWNLOAD_DIR}/gcc-${GCC_VER}.tar.bz2
 #	patch -p0 <gcc_libgcc_divide_exceptions.patch
-#	patch -p0 <gcc_multilib.patch
+	cp t-arm-elf.txt gcc-${GCC_VER}/gcc/config/arm/t-arm-elf
 	cd gcc-${GCC_VER}
+#	patch -p0 < ../gcc_multilib.patch
 
 	#cd libstdc++-v3
 	## uncomment AC_LIBTOOL_DLOPEN
@@ -431,11 +432,13 @@ if [ ! -f .gcc ]; then
 	mkdir build
 	cd build
 	../configure --target=${TOOLCHAIN_TARGET} --prefix=${TOOLCHAIN_PATH} \
-		--with-cpu=cortex-m3 --with-mode=thumb --enable-interwork --with-tune=cortex-m3 --with-float=soft --disable-multilib \
+		--with-mode=thumb --enable-interwork --with-float=soft --enable-multilib \
 		--enable-languages="c,c++" --with-newlib --without-headers \
 		--disable-shared --with-gnu-as --with-gnu-ld --with-dwarf2 --enable-initfini-array \
-		--enable-stage1-checking=all --enable-lto --disable-libgomp --disable-libssp --disable-libstdcxx-pch --disable-libmudflap \
-		--disable-nls --with-host-libstdcxx='-lstdc++' --with-system-zlib\
+		--enable-stage1-checking=all --enable-lto \
+		--disable-libgomp --disable-libssp --disable-libstdcxx-pch --disable-libmudflap \
+		--disable-libffi --disable-libquadmath --disable-tls  --disable-threads \
+		--disable-nls --with-host-libstdcxx='-lstdc++' --with-system-zlib \
 		--disable-__cxa_atexit \
 		--with-gmp=${CORTEX_TOPDIR}/static --with-mpfr=${CORTEX_TOPDIR}/static --with-mpc=${CORTEX_TOPDIR}/static \
 		--with-libelf=${CORTEX_TOPDIR}/static --with-isl=${CORTEX_TOPDIR}/static --with-cloog=${CORTEX_TOPDIR}/static \
@@ -489,7 +492,7 @@ if [ ! -f .newlib ]; then
 	cd build
 	#note: this needs arm-*-{eabi|elf}-cc to exist or link to arm-*-{eabi|elf}-gcc
 	../configure --target=${TOOLCHAIN_TARGET} --prefix=${TOOLCHAIN_PATH} \
-		--enable-interwork --disable-multilib --enable-target-optspace --disable-newlib-supplied-syscalls \
+		--enable-interwork --enable-multilib --enable-target-optspace --disable-newlib-supplied-syscalls \
 		--enable-newlib-elix-level=1 --enable-newlib-io-float --disable-newlib-atexit-dynamic-alloc --enable-newlib-reent-small \
 		--enable-newlib-multithread \
 		--disable-shared --disable-nls --with-gnu-as --with-gnu-ld --enable-lto \
@@ -529,7 +532,7 @@ if [ ! -f .gdb ]; then
 	mkdir build
 	cd build
 	../configure --target=${TOOLCHAIN_TARGET} --prefix=${TOOLCHAIN_PATH} \
-		--enable-werror --enable-stage1-checking=all --enable-lto --disable-multilib \
+		--enable-werror --enable-stage1-checking=all --enable-lto --enable-multilib \
 		--with-host-libstdcxx='-lstdc++' --disable-nls --disable-shared \
 		--with-gmp=${CORTEX_TOPDIR}/static --with-mpfr=${CORTEX_TOPDIR}/static --with-mpc=${CORTEX_TOPDIR}/static \
 		--with-libelf=${CORTEX_TOPDIR}/static --with-ppl=${CORTEX_TOPDIR}/static --with-cloog=${CORTEX_TOPDIR}/static \
