@@ -1,13 +1,13 @@
 #!/bin/bash
 #
-# $Id: build-gcc-arm.sh,v 1.56 2013/12/15 17:27:57 claudio Exp $
+# $Id: build-gcc-arm.sh,v 1.57 2014/01/07 12:31:28 claudio Exp $
 #
 # @brief Build cross compiler for ARM Cortex M3 processor
 # 
 # Builds a bare-metal cross GNU toolchain targetting the ARM Cortex M3
 # microprocessor in EABI mode and using the newlib embedded C library.
 #
-# @version $Revision: 1.56 $
+# @version $Revision: 1.57 $
 # @author  Claudio Lanconelli
 # @note This script was tested on a Ubuntu Linux 8.04 (x86 32/64bit) and
 #       Ubuntu 9.04 but with GCC 4.2.4 (newer version seems to rise some errors)
@@ -48,16 +48,16 @@ echo "gcc utilizzato: $CC"
 
 DOWNLOAD_DIR=${CORTEX_TOPDIR}/downloads
 
-BINUTILS_VER=2.23.2
-GDB_VER=7.6.1
+BINUTILS_VER=2.24
+GDB_VER=7.7
 GCC_VER=4.8.2
 #GMP_VER=5.0.5 performance <--> 4.3.2 stable
-GMP_VER=5.1.2
+GMP_VER=5.1.3
 MPFR_VER=3.1.2
-MPC_VER=1.0.1
+MPC_VER=1.0.2
 #PPL_VER=1.0
-ISL_VER=0.12.1
-CLOOG_VER=0.18.0
+ISL_VER=0.12.2
+CLOOG_VER=0.18.1
 NEWLIB_VER=2.1.0
 #INSIGHT_VER=6.8-1
 LIBELF_VER=0.8.13
@@ -145,7 +145,8 @@ else
 
 	GMP_PATH=http://ftp.gnu.org/pub/gnu/gmp
 	MPFR_PATH=http://www.mpfr.org/mpfr-current
-	MPC_PATH=http://www.multiprecision.org/mpc/download
+	#MPC_PATH=http://www.multiprecision.org/mpc/download
+	MPC_PATH=ftp://ftp.gnu.org/gnu/mpc
 	PPL_PATH=ftp://ftp.cs.unipr.it/pub/ppl/releases/${PPL_VER}
 	ISL_PATH=http://isl.gforge.inria.fr
 	CLOOG_PATH=ftp://gcc.gnu.org/pub/gcc/infrastructure
