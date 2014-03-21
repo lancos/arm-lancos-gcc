@@ -1,13 +1,13 @@
 #!/bin/bash
 #
-# $Id: build-gcc-arm.sh,v 1.58 2014/03/07 15:29:10 claudio Exp $
+# $Id: build-gcc-arm.sh,v 1.59 2014/03/21 12:59:52 gianluca Exp $
 #
 # @brief Build cross compiler for ARM Cortex M3 processor
 # 
 # Builds a bare-metal cross GNU toolchain targetting the ARM Cortex M3
 # microprocessor in EABI mode and using the newlib embedded C library.
 #
-# @version $Revision: 1.58 $
+# @version $Revision: 1.59 $
 # @author  Claudio Lanconelli
 # @note This script was tested on a Ubuntu Linux 8.04 (x86 32/64bit) and
 #       Ubuntu 9.04 but with GCC 4.2.4 (newer version seems to rise some errors)
@@ -62,6 +62,7 @@ NEWLIB_VER=2.1.0
 #INSIGHT_VER=6.8-1
 LIBELF_VER=0.8.13
 EXPAT_VER=2.0.1
+#ZLIB_VER=1.2.8
 
 AUTOCONF_VERMIN=2.64
 AUTOCONF_VERSION=`autoconf --version | head -n 1 | cut -d' ' -f4`
@@ -124,6 +125,7 @@ if [ "$1" == "local" ]; then
 	NEWLIB_PATH=${LOCAL_PATH}
 	INSIGHT_PATH=${LOCAL_PATH}
 	LIBELF_PATH=${LOCAL_PATH}
+	ZLIB_PATH=${LOCAL_PATH}
 
 	if [ ! -f ${DOWNLOAD_DIR}/expat-${EXPAT_VER}.tar.gz ]; then
 		cd ${DOWNLOAD_DIR}
@@ -153,6 +155,7 @@ else
 	INSIGHT_PATH=ftp://sourceware.org/pub/insight/releases
 	LIBELF_PATH=http://www.mr511.de/software
 	EXPAT_PATH=http://sourceforge.net/projects/expat/files/expat/${EXPAT_VER}/expat-${EXPAT_VER}.tar.gz
+	ZLIB_PATH=http://zlib.net
 
 	if [ ! -f ${DOWNLOAD_DIR}/expat-${EXPAT_VER}.tar.gz ]; then
 		cd ${DOWNLOAD_DIR}
@@ -205,15 +208,20 @@ fi
 if [ ! -f ${DOWNLOAD_DIR}/libelf-${LIBELF_VER}.tar.gz ]; then
 	wget ${LIBELF_PATH}/libelf-${LIBELF_VER}.tar.gz
 fi
+#if [ ! -f ${DOWNLOAD_DIR}/zlib-${ZLIB_VER}.tar.gz ]; then
+#	wget ${ZLIB_PATH}/zlib-${ZLIB_VER}.tar.gz
+#fi
 
 #Vista MinGW workaround (da Yagarto)
 echo "${OSTYPE}"
 if [ "${OSTYPE}" == "msys" ]; then
 	export CFLAGS="-D__USE_MINGW_ACCESS -pipe"
 	NUM_JOBS=1
+	SYSTEM_ZLIB=""
 else
 	#Numero di compilazioni concorrenti (consigliabile 2+ per un dual-core o 4+ per un quad-core)
 	NUM_JOBS=`getconf _NPROCESSORS_ONLN`
+	SYSTEM_ZLIB="--with-system-zlib"
 fi
 
 if [ "z$NUM_JOBS" == "z" ]; then
@@ -376,6 +384,20 @@ if [ ! -f .libcloog ]; then
 	touch .libcloog
 fi
 
+#echo "Build ZLIB"
+#cd ${CORTEX_TOPDIR}
+#if [ ! -f .libzlib ]; then
+#	rm -rf zlib-${ZLIB_VER}
+#	tar xfz ${DOWNLOAD_DIR}/zlib-${ZLIB_VER}.tar.gz
+#	cd zlib-${ZLIB_VER}
+#	./configure --prefix=${CORTEX_TOPDIR}/static --static 2>&1 | tee configure.log
+#	make -j${NUM_JOBS} 2>&1 | tee make.log
+#	make check 2>&1 | tee makecheck.log
+#	make install 2>&1 | tee makeinstall.log
+#	cd ${CORTEX_TOPDIR}
+#	touch .libzlib
+#fi
+
 echo ".Done"
 echo "Start building tools..."
 echo "Build BINUTILS"
@@ -440,7 +462,7 @@ if [ ! -f .gcc ]; then
 		--enable-stage1-checking=all --enable-lto \
 		--disable-libgomp --disable-libssp --disable-libstdcxx-pch --disable-libmudflap \
 		--disable-libffi --disable-libquadmath --disable-tls  --disable-threads \
-		--disable-nls --with-host-libstdcxx='-lstdc++' --with-system-zlib \
+		--disable-nls --with-host-libstdcxx='-lstdc++' ${SYSTEM_ZLIB} \
 		--disable-__cxa_atexit \
 		--with-gmp=${CORTEX_TOPDIR}/static --with-mpfr=${CORTEX_TOPDIR}/static --with-mpc=${CORTEX_TOPDIR}/static \
 		--with-libelf=${CORTEX_TOPDIR}/static --with-isl=${CORTEX_TOPDIR}/static --with-cloog=${CORTEX_TOPDIR}/static \
