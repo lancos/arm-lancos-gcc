@@ -1,13 +1,13 @@
 #!/bin/bash
 #
-# $Id: build-gcc-arm.sh,v 1.57 2014/01/07 12:31:28 claudio Exp $
+# $Id: build-gcc-arm.sh,v 1.58 2014/03/07 15:29:10 claudio Exp $
 #
 # @brief Build cross compiler for ARM Cortex M3 processor
 # 
 # Builds a bare-metal cross GNU toolchain targetting the ARM Cortex M3
 # microprocessor in EABI mode and using the newlib embedded C library.
 #
-# @version $Revision: 1.57 $
+# @version $Revision: 1.58 $
 # @author  Claudio Lanconelli
 # @note This script was tested on a Ubuntu Linux 8.04 (x86 32/64bit) and
 #       Ubuntu 9.04 but with GCC 4.2.4 (newer version seems to rise some errors)
@@ -57,7 +57,7 @@ MPFR_VER=3.1.2
 MPC_VER=1.0.2
 #PPL_VER=1.0
 ISL_VER=0.12.2
-CLOOG_VER=0.18.1
+CLOOG_VER=0.18.0
 NEWLIB_VER=2.1.0
 #INSIGHT_VER=6.8-1
 LIBELF_VER=0.8.13
@@ -360,6 +360,7 @@ if [ ! -f .libcloog ]; then
 	tar xfz ${DOWNLOAD_DIR}/cloog-${CLOOG_VER}.tar.gz
 	cd cloog-${CLOOG_VER}
 	patch -p1 < ../cloog_islver.patch
+	patch -p1 < ../cloog_isl_mingw.patch
 	mkdir build
 	cd build
 	../configure --prefix=${CORTEX_TOPDIR}/static \
