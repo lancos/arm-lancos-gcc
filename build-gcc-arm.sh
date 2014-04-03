@@ -1,13 +1,13 @@
 #!/bin/bash
 #
-# $Id: build-gcc-arm.sh,v 1.59 2014/03/21 12:59:52 gianluca Exp $
+# $Id: build-gcc-arm.sh,v 1.60 2014/03/21 16:16:04 claudio Exp $
 #
 # @brief Build cross compiler for ARM Cortex M3 processor
 # 
 # Builds a bare-metal cross GNU toolchain targetting the ARM Cortex M3
 # microprocessor in EABI mode and using the newlib embedded C library.
 #
-# @version $Revision: 1.59 $
+# @version $Revision: 1.60 $
 # @author  Claudio Lanconelli
 # @note This script was tested on a Ubuntu Linux 8.04 (x86 32/64bit) and
 #       Ubuntu 9.04 but with GCC 4.2.4 (newer version seems to rise some errors)
@@ -459,7 +459,7 @@ if [ ! -f .gcc ]; then
 		--with-mode=thumb --enable-interwork --with-float=soft --enable-multilib \
 		--enable-languages="c,c++" --with-newlib --without-headers \
 		--disable-shared --with-gnu-as --with-gnu-ld --with-dwarf2 --enable-initfini-array \
-		--enable-stage1-checking=all --enable-lto \
+		--enable-checking=release --enable-lto \
 		--disable-libgomp --disable-libssp --disable-libstdcxx-pch --disable-libmudflap \
 		--disable-libffi --disable-libquadmath --disable-tls  --disable-threads \
 		--disable-nls --with-host-libstdcxx='-lstdc++' ${SYSTEM_ZLIB} \
@@ -472,6 +472,7 @@ if [ ! -f .gcc ]; then
 #	--with-cpu=cortex-m3 --with-mode=thumb --with-tune=cortex-m3 --with-float=soft
 #	--without-included-gettext ??
 #	--enable-checking=release
+#	--enable-stage1-checking=all
 #	--enable-version-specific-runtime-libs
 
 #Yagarto gcc configure
