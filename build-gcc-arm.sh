@@ -1,13 +1,13 @@
 #!/bin/bash
 #
-# $Id: build-gcc-arm.sh,v 1.60 2014/03/21 16:16:04 claudio Exp $
+# $Id: build-gcc-arm.sh,v 1.61 2014/04/03 12:59:14 claudio Exp $
 #
 # @brief Build cross compiler for ARM Cortex M3 processor
 # 
 # Builds a bare-metal cross GNU toolchain targetting the ARM Cortex M3
 # microprocessor in EABI mode and using the newlib embedded C library.
 #
-# @version $Revision: 1.60 $
+# @version $Revision: 1.61 $
 # @author  Claudio Lanconelli
 # @note This script was tested on a Ubuntu Linux 8.04 (x86 32/64bit) and
 #       Ubuntu 9.04 but with GCC 4.2.4 (newer version seems to rise some errors)
@@ -56,7 +56,7 @@ GMP_VER=5.1.3
 MPFR_VER=3.1.2
 MPC_VER=1.0.2
 #PPL_VER=1.0
-ISL_VER=0.12.2
+#ISL_VER=0.12.2
 CLOOG_VER=0.18.0
 NEWLIB_VER=2.1.0
 #INSIGHT_VER=6.8-1
@@ -217,11 +217,9 @@ echo "${OSTYPE}"
 if [ "${OSTYPE}" == "msys" ]; then
 	export CFLAGS="-D__USE_MINGW_ACCESS -pipe"
 	NUM_JOBS=1
-	SYSTEM_ZLIB=""
 else
 	#Numero di compilazioni concorrenti (consigliabile 2+ per un dual-core o 4+ per un quad-core)
 	NUM_JOBS=`getconf _NPROCESSORS_ONLN`
-	SYSTEM_ZLIB="--with-system-zlib"
 fi
 
 if [ "z$NUM_JOBS" == "z" ]; then
@@ -368,7 +366,9 @@ if [ ! -f .libcloog ]; then
 	tar xfz ${DOWNLOAD_DIR}/cloog-${CLOOG_VER}.tar.gz
 	cd cloog-${CLOOG_VER}
 	patch -p1 < ../cloog_islver.patch
-	patch -p1 < ../cloog_isl_mingw.patch
+	if [ "${OSTYPE}" == "msys" ]; then
+		patch -p1 < ../cloog_isl_mingw.patch
+	fi
 	mkdir build
 	cd build
 	../configure --prefix=${CORTEX_TOPDIR}/static \
@@ -455,6 +455,12 @@ if [ ! -f .gcc ]; then
 
 	mkdir build
 	cd build
+	#OS dependant options
+	if [ "${OSTYPE}" == "msys" ]; then
+		GCC_CONF_OPTS="--disable-win32-registry"
+	else
+		GCC_CONF_OPTS="--with-system-zlib"
+	fi
 	../configure --target=${TOOLCHAIN_TARGET} --prefix=${TOOLCHAIN_PATH} \
 		--with-mode=thumb --enable-interwork --with-float=soft --enable-multilib \
 		--enable-languages="c,c++" --with-newlib --without-headers \
@@ -462,7 +468,7 @@ if [ ! -f .gcc ]; then
 		--enable-checking=release --enable-lto \
 		--disable-libgomp --disable-libssp --disable-libstdcxx-pch --disable-libmudflap \
 		--disable-libffi --disable-libquadmath --disable-tls  --disable-threads \
-		--disable-nls --with-host-libstdcxx='-lstdc++' ${SYSTEM_ZLIB} \
+		--disable-nls --with-host-libstdcxx='-lstdc++' ${GCC_CONF_OPTS} \
 		--disable-__cxa_atexit \
 		--with-gmp=${CORTEX_TOPDIR}/static --with-mpfr=${CORTEX_TOPDIR}/static --with-mpc=${CORTEX_TOPDIR}/static \
 		--with-libelf=${CORTEX_TOPDIR}/static --with-isl=${CORTEX_TOPDIR}/static --with-cloog=${CORTEX_TOPDIR}/static \
