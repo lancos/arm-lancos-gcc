@@ -1,13 +1,13 @@
 #!/bin/bash
 #
-# $Id: build-gcc-arm.sh,v 1.64 2014/06/11 14:19:30 claudio Exp $
+# $Id: build-gcc-arm.sh,v 1.65 2014/08/11 13:56:51 claudio Exp $
 #
 # @brief Build cross compiler for ARM Cortex M3 processor
 # 
 # Builds a bare-metal cross GNU toolchain targetting the ARM Cortex M3
 # microprocessor in EABI mode and using the newlib embedded C library.
 #
-# @version $Revision: 1.64 $
+# @version $Revision: 1.65 $
 # @author  Claudio Lanconelli
 # @note This script was tested on a Ubuntu Linux 8.04 (x86 32/64bit) and
 #       Ubuntu 9.04 but with GCC 4.2.4 (newer version seems to rise some errors)
@@ -49,7 +49,7 @@ echo "gcc utilizzato: $CC"
 DOWNLOAD_DIR=${CORTEX_TOPDIR}/downloads
 
 BINUTILS_VER=2.24
-GDB_VER=7.7.1
+GDB_VER=7.8
 GCC_VER=4.9.1
 #GMP_VER=5.0.5 performance <--> 4.3.2 stable
 GMP_VER=5.1.3
@@ -175,8 +175,8 @@ cd ${DOWNLOAD_DIR}
 if [ ! -f ${DOWNLOAD_DIR}/binutils-${BINUTILS_VER}.tar.bz2 ]; then
 	wget ${BINUTILS_PATH}/binutils-${BINUTILS_VER}.tar.bz2
 fi
-if [ ! -f ${DOWNLOAD_DIR}/gdb-${GDB_VER}.tar.bz2 ]; then
-	wget ${GDB_PATH}/gdb-${GDB_VER}.tar.bz2
+if [ ! -f ${DOWNLOAD_DIR}/gdb-${GDB_VER}.tar.xz ]; then
+	wget ${GDB_PATH}/gdb-${GDB_VER}.tar.xz
 fi
 if [ ! -f ${DOWNLOAD_DIR}/gcc-${GCC_VER}.tar.bz2 ]; then
 	wget ${GCC_PATH}/gcc-${GCC_VER}.tar.bz2
@@ -526,7 +526,9 @@ if [ ! -f .newlib ]; then
 	../configure --target=${TOOLCHAIN_TARGET} --prefix=${TOOLCHAIN_PATH} \
 		--enable-interwork --enable-multilib --enable-target-optspace --disable-newlib-supplied-syscalls \
 		--enable-newlib-elix-level=1 --enable-newlib-io-float --disable-newlib-atexit-dynamic-alloc --enable-newlib-reent-small \
-		--enable-newlib-multithread \
+		--enable-newlib-multithread --enable-newlib-io-c99-formats --enable-lite-exit \
+		--disable-newlib-fvwrite-in-streamio --disable-newlib-fseek-optimization --disable-newlib-unbuf-stream-opt \
+		--enable-newlib-iconv --enable-newlib-mb \
 		--disable-shared --disable-nls --with-gnu-as --with-gnu-ld --enable-lto \
 		--with-gmp=${CORTEX_TOPDIR}/static --with-mpfr=${CORTEX_TOPDIR}/static --with-mpc=${CORTEX_TOPDIR}/static \
 		--with-libelf=${CORTEX_TOPDIR}/static --with-ppl=${CORTEX_TOPDIR}/static --with-cloog=${CORTEX_TOPDIR}/static \
@@ -538,6 +540,7 @@ if [ ! -f .newlib ]; then
 #    --enable-newlib-io-long-long --enable-newlib-register-fini --disable-newlib-supplied-syscalls --disable-nls
 #Freddie Chopin:
 #- newlib with different configure options (--enable-newlib-register-fini removed, --enable-newlib-io-c99-formats, --disable-newlib-atexit-dynamic-alloc, --enable-newlib-reent-small, --disable-newlib-fvwrite-in-streamio, --disable-newlib-fseek-optimization, --disable-newlib-wide-orient, --disable-newlib-unbuf-stream-opt) 
+#	--enable-lite-exit
 
 	make -j${NUM_JOBS} CFLAGS_FOR_TARGET="-DREENTRANT_SYSCALLS_PROVIDED -DSMALL_MEMORY -DHAVE_ASSERT_FUNC -D__BUFSIZ__=256" 2>&1 | tee make.log
 	make install 2>&1 | tee install.log
@@ -559,7 +562,7 @@ echo "Build GDB"
 cd ${CORTEX_TOPDIR}
 if [ ! -f .gdb ]; then
 	rm -rf gdb-${GDB_VER}
-	tar xfj ${DOWNLOAD_DIR}/gdb-${GDB_VER}.tar.bz2
+	tar xfJ ${DOWNLOAD_DIR}/gdb-${GDB_VER}.tar.xz
 	cd gdb-${GDB_VER}
 	mkdir build
 	cd build
