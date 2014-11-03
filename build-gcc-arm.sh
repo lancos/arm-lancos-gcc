@@ -1,13 +1,13 @@
 #!/bin/bash
 #
-# $Id: build-gcc-arm.sh,v 1.65 2014/08/11 13:56:51 claudio Exp $
+# $Id: build-gcc-arm.sh,v 1.66 2014/10/29 18:37:43 claudio Exp $
 #
 # @brief Build cross compiler for ARM Cortex M3 processor
 # 
 # Builds a bare-metal cross GNU toolchain targetting the ARM Cortex M3
 # microprocessor in EABI mode and using the newlib embedded C library.
 #
-# @version $Revision: 1.65 $
+# @version $Revision: 1.66 $
 # @author  Claudio Lanconelli
 # @note This script was tested on a Ubuntu Linux 8.04 (x86 32/64bit) and
 #       Ubuntu 9.04 but with GCC 4.2.4 (newer version seems to rise some errors)
@@ -64,6 +64,9 @@ LIBELF_VER=0.8.13
 EXPAT_VER=2.0.1
 #ZLIB_VER=1.2.8
 
+#ENABLE_WCMB=no
+ENABLE_WCMB=yes
+
 AUTOCONF_VERMIN=2.64
 AUTOCONF_VERSION=`autoconf --version | head -n 1 | cut -d' ' -f4`
 
@@ -84,6 +87,10 @@ fi
 #INSIGHT_VER=weekly-7.0.50-20091102
 
 TOOLCHAIN_NAME="gcc${GCC_VER}-bu${BINUTILS_VER}-gdb${GDB_VER}-nl${NEWLIB_VER}-multilib"
+if [ "${ENABLE_WCMB}" == "yes" ]; then
+	TOOLCHAIN_NAME="${TOOLCHAIN_NAME}-wcmb"
+fi
+
 TOOLCHAINLIB_NAME="gmp${GMP_VER}-mpfr${MPFR_VER}-mpc${MPC_VER}-cloog${CLOOG_VER}-libelf${LIBELF_VER}-expat${EXPAT_VER}"
 echo "Build toolchain ${TOOLCHAIN_NAME}"
 echo "toolchain libs ${TOOLCHAINLIB_NAME}"
@@ -510,9 +517,11 @@ if [ ! -f .newlib ]; then
 #	patch -p0 <newlib_mktime.diff
 #	patch -p0 <newlib_iconv_ccs.patch
 	cd newlib-${NEWLIB_VER}
-	patch -p0 < ../newlib_stpcpy.patch
-	patch -p0 < ../newlib_fseeko.patch
-#	patch -p0 < ../newlib_configure_ppl_version.patch
+	# Le patch stpcpy e fseeko sono necessarie solo in elix=1
+	if [ "${ENABLE_WCMB}" == "no" ]; then
+		patch -p0 < ../newlib_stpcpy.patch
+	#	patch -p0 < ../newlib_fseeko.patch
+	fi
 	patch -p1 < ../newlib_Fix-wrong-path-to-config-default.mh.patch
 
 	if [ ${AUTOCONF_VERMIN} != ${AUTOCONF_VERSION} ]; then
@@ -522,20 +531,25 @@ if [ ! -f .newlib ]; then
 	autoconf
 	mkdir build
 	cd build
+
+	# Aggiungere per abilitare supporto alle stringhe multi-byte (wide-char)
+	if [ "${ENABLE_WCMB}" == "yes" ]; then
+		NEWLIB_CONF_PARAM="--enable-newlib-elix-level=2 --enable-newlib-iconv --enable-newlib-mb "
+	else
+		NEWLIB_CONF_PARAM="--enable-newlib-elix-level=1 "
+	fi
 	#note: this needs arm-*-{eabi|elf}-cc to exist or link to arm-*-{eabi|elf}-gcc
 	../configure --target=${TOOLCHAIN_TARGET} --prefix=${TOOLCHAIN_PATH} \
 		--enable-interwork --enable-multilib --enable-target-optspace --disable-newlib-supplied-syscalls \
-		--enable-newlib-elix-level=1 --enable-newlib-io-float --disable-newlib-atexit-dynamic-alloc --enable-newlib-reent-small \
+		--enable-newlib-io-float --disable-newlib-atexit-dynamic-alloc --enable-newlib-reent-small \
 		--enable-newlib-multithread --enable-newlib-io-c99-formats --enable-lite-exit \
 		--disable-newlib-fvwrite-in-streamio --disable-newlib-fseek-optimization --disable-newlib-unbuf-stream-opt \
-		--enable-newlib-iconv --enable-newlib-mb \
 		--disable-shared --disable-nls --with-gnu-as --with-gnu-ld --enable-lto \
+		${NEWLIB_CONF_PARAM} \
 		--with-gmp=${CORTEX_TOPDIR}/static --with-mpfr=${CORTEX_TOPDIR}/static --with-mpc=${CORTEX_TOPDIR}/static \
 		--with-libelf=${CORTEX_TOPDIR}/static --with-ppl=${CORTEX_TOPDIR}/static --with-cloog=${CORTEX_TOPDIR}/static \
 		2>&1 | tee configure.log
 
-# Aggiungere per abilitare supporto alle stringhe multi-byte (wide-char)
-#	--enable-newlib-iconv --enable-newlib-mb
 #Linaro:
 #    --enable-newlib-io-long-long --enable-newlib-register-fini --disable-newlib-supplied-syscalls --disable-nls
 #Freddie Chopin:
