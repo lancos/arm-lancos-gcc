@@ -1,13 +1,13 @@
 #!/bin/bash
 #
-# $Id: build-gcc-arm.sh,v 1.66 2014/10/29 18:37:43 claudio Exp $
+# $Id: build-gcc-arm.sh,v 1.67 2014/11/03 17:41:08 claudio Exp $
 #
 # @brief Build cross compiler for ARM Cortex M3 processor
 # 
 # Builds a bare-metal cross GNU toolchain targetting the ARM Cortex M3
 # microprocessor in EABI mode and using the newlib embedded C library.
 #
-# @version $Revision: 1.66 $
+# @version $Revision: 1.67 $
 # @author  Claudio Lanconelli
 # @note This script was tested on a Ubuntu Linux 8.04 (x86 32/64bit) and
 #       Ubuntu 9.04 but with GCC 4.2.4 (newer version seems to rise some errors)
@@ -520,7 +520,10 @@ if [ ! -f .newlib ]; then
 	# Le patch stpcpy e fseeko sono necessarie solo in elix=1
 	if [ "${ENABLE_WCMB}" == "no" ]; then
 		patch -p0 < ../newlib_stpcpy.patch
-	#	patch -p0 < ../newlib_fseeko.patch
+		patch -p0 < ../newlib_fseeko.patch
+#	else
+	#	patch -p1 < ../newlib_locale.patch
+	#	patch -p1 < ../newlib_locale_lctype.patch
 	fi
 	patch -p1 < ../newlib_Fix-wrong-path-to-config-default.mh.patch
 
@@ -534,14 +537,14 @@ if [ ! -f .newlib ]; then
 
 	# Aggiungere per abilitare supporto alle stringhe multi-byte (wide-char)
 	if [ "${ENABLE_WCMB}" == "yes" ]; then
-		NEWLIB_CONF_PARAM="--enable-newlib-elix-level=2 --enable-newlib-iconv --enable-newlib-mb "
+		NEWLIB_CONF_PARAM="--enable-newlib-elix-level=2 --enable-newlib-iconv --enable-newlib-mb --enable-newlib-wide-orient --enable-newlib-iconv-external-ccs --enable-newlib-iconv-encodings=iso_8859_1,iso8859_15,cp1252,utf8,big5 "
 	else
-		NEWLIB_CONF_PARAM="--enable-newlib-elix-level=1 "
+		NEWLIB_CONF_PARAM="--enable-newlib-elix-level=1 --disable-newlib-wide-orient "
 	fi
 	#note: this needs arm-*-{eabi|elf}-cc to exist or link to arm-*-{eabi|elf}-gcc
 	../configure --target=${TOOLCHAIN_TARGET} --prefix=${TOOLCHAIN_PATH} \
 		--enable-interwork --enable-multilib --enable-target-optspace --disable-newlib-supplied-syscalls \
-		--enable-newlib-io-float --disable-newlib-atexit-dynamic-alloc --enable-newlib-reent-small \
+		--enable-newlib-io-float --enable-newlib-global-atexit --enable-newlib-reent-small \
 		--enable-newlib-multithread --enable-newlib-io-c99-formats --enable-lite-exit \
 		--disable-newlib-fvwrite-in-streamio --disable-newlib-fseek-optimization --disable-newlib-unbuf-stream-opt \
 		--disable-shared --disable-nls --with-gnu-as --with-gnu-ld --enable-lto \
@@ -554,9 +557,9 @@ if [ ! -f .newlib ]; then
 #    --enable-newlib-io-long-long --enable-newlib-register-fini --disable-newlib-supplied-syscalls --disable-nls
 #Freddie Chopin:
 #- newlib with different configure options (--enable-newlib-register-fini removed, --enable-newlib-io-c99-formats, --disable-newlib-atexit-dynamic-alloc, --enable-newlib-reent-small, --disable-newlib-fvwrite-in-streamio, --disable-newlib-fseek-optimization, --disable-newlib-wide-orient, --disable-newlib-unbuf-stream-opt) 
-#	--enable-lite-exit
-
-	make -j${NUM_JOBS} CFLAGS_FOR_TARGET="-DREENTRANT_SYSCALLS_PROVIDED -DSMALL_MEMORY -DHAVE_ASSERT_FUNC -D__BUFSIZ__=256" 2>&1 | tee make.log
+#	--enable-lite-exit --disable-newlib-atexit-dynamic-alloc 
+#-D__HAVE_LOCALE_INFO_EXTENDED__ -D__HAVE_LOCALE_INFO__
+	make -j${NUM_JOBS} CFLAGS_FOR_TARGET="-DREENTRANT_SYSCALLS_PROVIDED -DSMALL_MEMORY -DHAVE_ASSERT_FUNC -D__BUFSIZ__=256 -D_MB_EXTENDED_CHARSETS_ALL" 2>&1 | tee make.log
 	make install 2>&1 | tee install.log
 	cd ${CORTEX_TOPDIR}
 	touch .newlib
