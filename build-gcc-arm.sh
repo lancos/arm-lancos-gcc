@@ -1,13 +1,13 @@
 #!/bin/bash
 #
-# $Id: build-gcc-arm.sh,v 1.67 2014/11/03 17:41:08 claudio Exp $
+# $Id: build-gcc-arm.sh,v 1.68 2014/11/10 00:22:40 claudio Exp $
 #
 # @brief Build cross compiler for ARM Cortex M3 processor
 # 
 # Builds a bare-metal cross GNU toolchain targetting the ARM Cortex M3
 # microprocessor in EABI mode and using the newlib embedded C library.
 #
-# @version $Revision: 1.67 $
+# @version $Revision: 1.68 $
 # @author  Claudio Lanconelli
 # @note This script was tested on a Ubuntu Linux 8.04 (x86 32/64bit) and
 #       Ubuntu 9.04 but with GCC 4.2.4 (newer version seems to rise some errors)
@@ -49,8 +49,8 @@ echo "gcc utilizzato: $CC"
 DOWNLOAD_DIR=${CORTEX_TOPDIR}/downloads
 
 BINUTILS_VER=2.24
-GDB_VER=7.8
-GCC_VER=4.9.1
+GDB_VER=7.8.1
+GCC_VER=4.9.2
 #GMP_VER=5.0.5 performance <--> 4.3.2 stable
 GMP_VER=5.1.3
 MPFR_VER=3.1.2
@@ -537,7 +537,7 @@ if [ ! -f .newlib ]; then
 
 	# Aggiungere per abilitare supporto alle stringhe multi-byte (wide-char)
 	if [ "${ENABLE_WCMB}" == "yes" ]; then
-		NEWLIB_CONF_PARAM="--enable-newlib-elix-level=2 --enable-newlib-iconv --enable-newlib-mb --enable-newlib-wide-orient --enable-newlib-iconv-external-ccs --enable-newlib-iconv-encodings=iso_8859_1,iso8859_15,cp1252,utf8,big5 "
+		NEWLIB_CONF_PARAM="--enable-newlib-elix-level=2 --enable-newlib-mb --enable-newlib-wide-orient --enable-newlib-iconv --enable-newlib-iconv-external-ccs --enable-newlib-iconv-encodings=iso_8859_1,iso8859_15,cp1252,utf8,big5 "
 	else
 		NEWLIB_CONF_PARAM="--enable-newlib-elix-level=1 --disable-newlib-wide-orient "
 	fi
@@ -558,7 +558,7 @@ if [ ! -f .newlib ]; then
 #Freddie Chopin:
 #- newlib with different configure options (--enable-newlib-register-fini removed, --enable-newlib-io-c99-formats, --disable-newlib-atexit-dynamic-alloc, --enable-newlib-reent-small, --disable-newlib-fvwrite-in-streamio, --disable-newlib-fseek-optimization, --disable-newlib-wide-orient, --disable-newlib-unbuf-stream-opt) 
 #	--enable-lite-exit --disable-newlib-atexit-dynamic-alloc 
-#-D__HAVE_LOCALE_INFO_EXTENDED__ -D__HAVE_LOCALE_INFO__
+#-D__HAVE_LOCALE_INFO__ -D__HAVE_LOCALE_INFO_EXTENDED__
 	make -j${NUM_JOBS} CFLAGS_FOR_TARGET="-DREENTRANT_SYSCALLS_PROVIDED -DSMALL_MEMORY -DHAVE_ASSERT_FUNC -D__BUFSIZ__=256 -D_MB_EXTENDED_CHARSETS_ALL" 2>&1 | tee make.log
 	make install 2>&1 | tee install.log
 	cd ${CORTEX_TOPDIR}
