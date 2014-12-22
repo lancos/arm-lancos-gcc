@@ -1,13 +1,13 @@
 #!/bin/bash
 #
-# $Id: build-gcc-arm.sh,v 1.68 2014/11/10 00:22:40 claudio Exp $
+# $Id: build-gcc-arm.sh,v 1.69 2014/11/11 16:26:39 claudio Exp $
 #
 # @brief Build cross compiler for ARM Cortex M3 processor
 # 
 # Builds a bare-metal cross GNU toolchain targetting the ARM Cortex M3
 # microprocessor in EABI mode and using the newlib embedded C library.
 #
-# @version $Revision: 1.68 $
+# @version $Revision: 1.69 $
 # @author  Claudio Lanconelli
 # @note This script was tested on a Ubuntu Linux 8.04 (x86 32/64bit) and
 #       Ubuntu 9.04 but with GCC 4.2.4 (newer version seems to rise some errors)
@@ -58,7 +58,7 @@ MPC_VER=1.0.2
 #PPL_VER=1.0
 #ISL_VER=0.12.2
 CLOOG_VER=0.18.0
-NEWLIB_VER=2.1.0
+NEWLIB_VER=2.2.0
 #INSIGHT_VER=6.8-1
 LIBELF_VER=0.8.13
 EXPAT_VER=2.0.1
@@ -525,7 +525,7 @@ if [ ! -f .newlib ]; then
 	#	patch -p1 < ../newlib_locale.patch
 	#	patch -p1 < ../newlib_locale_lctype.patch
 	fi
-	patch -p1 < ../newlib_Fix-wrong-path-to-config-default.mh.patch
+#	patch -p1 < ../newlib_Fix-wrong-path-to-config-default.mh.patch
 
 	if [ ${AUTOCONF_VERMIN} != ${AUTOCONF_VERSION} ]; then
 		# hack: allow autoconf version 2.65 instead of 2.64
