@@ -1,13 +1,13 @@
 #!/bin/bash
 #
-# $Id: build-gcc-arm.sh,v 1.69 2014/11/11 16:26:39 claudio Exp $
+# $Id: build-gcc-arm.sh,v 1.70 2014/12/22 17:01:46 claudio Exp $
 #
 # @brief Build cross compiler for ARM Cortex M3 processor
 # 
 # Builds a bare-metal cross GNU toolchain targetting the ARM Cortex M3
 # microprocessor in EABI mode and using the newlib embedded C library.
 #
-# @version $Revision: 1.69 $
+# @version $Revision: 1.70 $
 # @author  Claudio Lanconelli
 # @note This script was tested on a Ubuntu Linux 8.04 (x86 32/64bit) and
 #       Ubuntu 9.04 but with GCC 4.2.4 (newer version seems to rise some errors)
@@ -32,6 +32,10 @@
 #Impostiamo i flag per uscire al primo errore (anche usando il "make | tee")
 set -o errexit
 set -o pipefail
+#set -u
+set -o nounset
+#set -x
+set -o xtrace
 
 #export PATH=${HOME}/bin:${PATH}
 #export LD_LIBRARY_PATH=${HOME}/lib:${LD_LIBRARY_PATH}
@@ -48,7 +52,7 @@ echo "gcc utilizzato: $CC"
 
 DOWNLOAD_DIR=${CORTEX_TOPDIR}/downloads
 
-BINUTILS_VER=2.24
+BINUTILS_VER=2.25
 GDB_VER=7.8.1
 GCC_VER=4.9.2
 #GMP_VER=5.0.5 performance <--> 4.3.2 stable
@@ -57,11 +61,10 @@ MPFR_VER=3.1.2
 MPC_VER=1.0.2
 #PPL_VER=1.0
 #ISL_VER=0.12.2
-CLOOG_VER=0.18.0
+CLOOG_VER=0.18.1
 NEWLIB_VER=2.2.0
-#INSIGHT_VER=6.8-1
 LIBELF_VER=0.8.13
-EXPAT_VER=2.0.1
+EXPAT_VER=2.1.0
 #ZLIB_VER=1.2.8
 
 #ENABLE_WCMB=no
@@ -79,12 +82,6 @@ if [ ${AUTOCONF_VERMIN_INT} -gt ${AUTOCONF_VER_INT} ]; then
 else
 	echo "Ok Autoconf version = ${AUTOCONF_VERSION} (${AUTOCONF_VER_INT}), Required = ${AUTOCONF_VERMIN} (${AUTOCONF_VERMIN_INT})"
 fi
-
-#Snapshots releases
-#BINUTILS_VER=2.20.51
-#GDB_VER=6.8.50.20090916
-#GCC_VER=4.5-20091029
-#INSIGHT_VER=weekly-7.0.50-20091102
 
 TOOLCHAIN_NAME="gcc${GCC_VER}-bu${BINUTILS_VER}-gdb${GDB_VER}-nl${NEWLIB_VER}-multilib"
 if [ "${ENABLE_WCMB}" == "yes" ]; then
@@ -130,7 +127,6 @@ if [ "$1" == "local" ]; then
 	PPL_PATH=${LOCAL_PATH}
 	CLOOG_PATH=${LOCAL_PATH}
 	NEWLIB_PATH=${LOCAL_PATH}
-	INSIGHT_PATH=${LOCAL_PATH}
 	LIBELF_PATH=${LOCAL_PATH}
 	ZLIB_PATH=${LOCAL_PATH}
 
@@ -159,7 +155,6 @@ else
 	PPL_PATH=ftp://ftp.cs.unipr.it/pub/ppl/releases/${PPL_VER}
 	ISL_PATH=http://isl.gforge.inria.fr
 	CLOOG_PATH=ftp://gcc.gnu.org/pub/gcc/infrastructure
-	INSIGHT_PATH=ftp://sourceware.org/pub/insight/releases
 	LIBELF_PATH=http://www.mr511.de/software
 	EXPAT_PATH=http://sourceforge.net/projects/expat/files/expat/${EXPAT_VER}/expat-${EXPAT_VER}.tar.gz
 	ZLIB_PATH=http://zlib.net
@@ -174,7 +169,6 @@ else
 	#BINUTILS_PATH=ftp://sourceware.org/pub/binutils/snapshots
 	#GDB_PATH=ftp://sourceware.org/pub/gdb/snapshots/current
 	#GCC_PATH=ftp://sourceware.org/pub/gcc/snapshots/${GCC_VER}
-	#INSIGHT_PATH=ftp://sourceware.org/pub/insight/snapshots/current
 fi
 
 #Inizia download (solo se necessario)
@@ -197,9 +191,6 @@ fi
 if [ ! -f ${DOWNLOAD_DIR}/newlib-${NEWLIB_VER}.tar.gz ]; then
 	wget ${NEWLIB_PATH}/newlib-${NEWLIB_VER}.tar.gz
 fi
-#if [ ! -f ${DOWNLOAD_DIR}/insight-${INSIGHT_VER}.tar.bz2 ]; then
-#	wget ${INSIGHT_PATH}/insight-${INSIGHT_VER}.tar.bz2
-#fi
 if [ ! -f ${DOWNLOAD_DIR}/mpc-${MPC_VER}.tar.gz ]; then
 	wget ${MPC_PATH}/mpc-${MPC_VER}.tar.gz
 fi
@@ -422,12 +413,21 @@ if [ ! -f .binutils ]; then
 	autoconf
 	mkdir build
 	cd build
-	../configure --target=${TOOLCHAIN_TARGET} --prefix=${TOOLCHAIN_PATH} --disable-shared \
-		--enable-interwork --enable-multilib --with-gnu-as --with-gnu-ld --disable-nls --with-float=soft \
-		--with-gmp=${CORTEX_TOPDIR}/static --with-mpfr=${CORTEX_TOPDIR}/static --with-mpc=${CORTEX_TOPDIR}/static \
+	../configure --target=${TOOLCHAIN_TARGET} --prefix=${TOOLCHAIN_PATH} \
+		--disable-shared \
+		--enable-interwork \
+		--enable-multilib \
+		--with-gnu-as \
+		--with-gnu-ld \
+		--disable-nls \
+		--with-float=soft \
+		--with-gmp=${CORTEX_TOPDIR}/static \
+		--with-mpfr=${CORTEX_TOPDIR}/static \
+		--with-mpc=${CORTEX_TOPDIR}/static \
 		2>&1 | tee configure.log
 
-#	--with-gmp= --with-mpfr= --with-float=soft --with-sysroot=
+#	--with-sysroot=
+#	--enable-plugins --disable-sim --disable-readline --disable-libdecnumber --disable-gdb
 #		--with-ppl=${CORTEX_TOPDIR}/static --with-cloog=${CORTEX_TOPDIR}/static \
 	make -j${NUM_JOBS} all 2>&1 | tee make.log
 	make install 2>&1 | tee install.log
@@ -469,16 +469,37 @@ if [ ! -f .gcc ]; then
 		GCC_CONF_OPTS="--with-system-zlib"
 	fi
 	../configure --target=${TOOLCHAIN_TARGET} --prefix=${TOOLCHAIN_PATH} \
-		--with-mode=thumb --enable-interwork --with-float=soft --enable-multilib \
-		--enable-languages="c,c++" --with-newlib --without-headers \
-		--disable-shared --with-gnu-as --with-gnu-ld --with-dwarf2 --enable-initfini-array \
-		--enable-checking=release --enable-lto \
-		--disable-libgomp --disable-libssp --disable-libstdcxx-pch --disable-libmudflap \
-		--disable-libffi --disable-libquadmath --disable-tls  --disable-threads \
-		--disable-nls --with-host-libstdcxx='-lstdc++' ${GCC_CONF_OPTS} \
+		--with-mode=thumb \
+		--enable-interwork \
+		--with-float=soft \
+		--enable-multilib \
+		--enable-languages="c,c++" \
+		--with-newlib \
+		--without-headers \
+		--with-gnu-as \
+		--with-gnu-ld \
+		--with-dwarf2 \
+		--enable-initfini-array \
+		--enable-checking=release \
+		--enable-lto \
+		--disable-libffi \
+		--disable-libgomp \
+		--disable-libmudflap \
+		--disable-libquadmath \
+		--disable-libssp \
+		--disable-libstdcxx-pch \
+		--disable-nls \
+		--disable-shared \
+		--disable-threads \
+		--disable-tls \
+		--with-host-libstdcxx='-lstdc++' ${GCC_CONF_OPTS} \
 		--disable-__cxa_atexit \
-		--with-gmp=${CORTEX_TOPDIR}/static --with-mpfr=${CORTEX_TOPDIR}/static --with-mpc=${CORTEX_TOPDIR}/static \
-		--with-libelf=${CORTEX_TOPDIR}/static --with-isl=${CORTEX_TOPDIR}/static --with-cloog=${CORTEX_TOPDIR}/static \
+		--with-gmp=${CORTEX_TOPDIR}/static \
+		--with-mpfr=${CORTEX_TOPDIR}/static \
+		--with-mpc=${CORTEX_TOPDIR}/static \
+		--with-libelf=${CORTEX_TOPDIR}/static \
+		--with-isl=${CORTEX_TOPDIR}/static \
+		--with-cloog=${CORTEX_TOPDIR}/static \
 		2>&1 | tee configure.log
 
 #	--enable-target-optspace
@@ -543,23 +564,41 @@ if [ ! -f .newlib ]; then
 	fi
 	#note: this needs arm-*-{eabi|elf}-cc to exist or link to arm-*-{eabi|elf}-gcc
 	../configure --target=${TOOLCHAIN_TARGET} --prefix=${TOOLCHAIN_PATH} \
-		--enable-interwork --enable-multilib --enable-target-optspace --disable-newlib-supplied-syscalls \
-		--enable-newlib-io-float --enable-newlib-global-atexit --enable-newlib-reent-small \
-		--enable-newlib-multithread --enable-newlib-io-c99-formats --enable-lite-exit \
-		--disable-newlib-fvwrite-in-streamio --disable-newlib-fseek-optimization --disable-newlib-unbuf-stream-opt \
-		--disable-shared --disable-nls --with-gnu-as --with-gnu-ld --enable-lto \
+		--enable-interwork \
+		--enable-multilib \
+		--enable-newlib-io-float \
+		--enable-newlib-global-atexit \
+		--enable-newlib-reent-small \
+		--enable-newlib-multithread \
+		--enable-newlib-io-c99-formats \
+		--enable-lite-exit \
+		--disable-newlib-supplied-syscalls \
+		--disable-newlib-atexit-dynamic-alloc \
+		--disable-newlib-fvwrite-in-streamio \
+		--disable-newlib-fseek-optimization \
+		--disable-newlib-unbuf-stream-opt \
+		--disable-shared \
+		--disable-nls \
+		--with-gnu-as \
+		--with-gnu-ld \
+		--enable-lto \
 		${NEWLIB_CONF_PARAM} \
-		--with-gmp=${CORTEX_TOPDIR}/static --with-mpfr=${CORTEX_TOPDIR}/static --with-mpc=${CORTEX_TOPDIR}/static \
-		--with-libelf=${CORTEX_TOPDIR}/static --with-ppl=${CORTEX_TOPDIR}/static --with-cloog=${CORTEX_TOPDIR}/static \
+		--with-gmp=${CORTEX_TOPDIR}/static \
+		--with-mpfr=${CORTEX_TOPDIR}/static \
+		--with-mpc=${CORTEX_TOPDIR}/static \
+		--with-libelf=${CORTEX_TOPDIR}/static \
+		--with-ppl=${CORTEX_TOPDIR}/static \
+		--with-cloog=${CORTEX_TOPDIR}/static \
 		2>&1 | tee configure.log
 
+# --enable-target-optspace
 #Linaro:
-#    --enable-newlib-io-long-long --enable-newlib-register-fini --disable-newlib-supplied-syscalls --disable-nls
+#    --enable-newlib-io-long-long --enable-newlib-register-fini
 #Freddie Chopin:
 #- newlib with different configure options (--enable-newlib-register-fini removed, --enable-newlib-io-c99-formats, --disable-newlib-atexit-dynamic-alloc, --enable-newlib-reent-small, --disable-newlib-fvwrite-in-streamio, --disable-newlib-fseek-optimization, --disable-newlib-wide-orient, --disable-newlib-unbuf-stream-opt) 
 #	--enable-lite-exit --disable-newlib-atexit-dynamic-alloc 
 #-D__HAVE_LOCALE_INFO__ -D__HAVE_LOCALE_INFO_EXTENDED__
-	make -j${NUM_JOBS} CFLAGS_FOR_TARGET="-DREENTRANT_SYSCALLS_PROVIDED -DSMALL_MEMORY -DHAVE_ASSERT_FUNC -D__BUFSIZ__=256 -D_MB_EXTENDED_CHARSETS_ALL" 2>&1 | tee make.log
+	make -j${NUM_JOBS} CFLAGS_FOR_TARGET="-DREENTRANT_SYSCALLS_PROVIDED -DSMALL_MEMORY -DHAVE_ASSERT_FUNC -D__BUFSIZ__=256 -D_MB_EXTENDED_CHARSETS_ALL -ffunction-sections -fdata-sections" 2>&1 | tee make.log
 	make install 2>&1 | tee install.log
 	cd ${CORTEX_TOPDIR}
 	touch .newlib
@@ -584,10 +623,19 @@ if [ ! -f .gdb ]; then
 	mkdir build
 	cd build
 	../configure --target=${TOOLCHAIN_TARGET} --prefix=${TOOLCHAIN_PATH} \
-		--enable-werror --enable-stage1-checking=all --enable-lto --enable-multilib \
-		--with-host-libstdcxx='-lstdc++' --disable-nls --disable-shared \
-		--with-gmp=${CORTEX_TOPDIR}/static --with-mpfr=${CORTEX_TOPDIR}/static --with-mpc=${CORTEX_TOPDIR}/static \
-		--with-libelf=${CORTEX_TOPDIR}/static --with-ppl=${CORTEX_TOPDIR}/static --with-cloog=${CORTEX_TOPDIR}/static \
+		--enable-werror \
+		--enable-stage1-checking=all \
+		--enable-lto \
+		--enable-multilib \
+		--with-host-libstdcxx='-lstdc++' \
+		--disable-nls \
+		--disable-shared \
+		--with-gmp=${CORTEX_TOPDIR}/static \
+		--with-mpfr=${CORTEX_TOPDIR}/static \
+		--with-mpc=${CORTEX_TOPDIR}/static \
+		--with-libelf=${CORTEX_TOPDIR}/static \
+		--with-ppl=${CORTEX_TOPDIR}/static \
+		--with-cloog=${CORTEX_TOPDIR}/static \
 		--with-libexpat-prefix=${CORTEX_TOPDIR}/static \
 		2>&1 | tee configure.log
 	make -j${NUM_JOBS} 2>&1 | tee make.log
@@ -595,23 +643,6 @@ if [ ! -f .gdb ]; then
 	cd ${CORTEX_TOPDIR}
 	touch .gdb
 fi
-
-#N.B. Insight reinstalla anche il GDB, percio` probabilmente dovrebbero essere mutualmente esclusivi
-#     per ora manteniamo commentato INSIGHT che comunque funziona male. Preferibile a INSIGHT e` la coppia GDB + Eclipse
-#Build INSIGHT
-#cd ${CORTEX_TOPDIR}
-#if [ ! -f .insight ]; then
-#	rm -rf insight-${INSIGHT_VER}
-#	tar xfj ${DOWNLOAD_DIR}/insight-${INSIGHT_VER}.tar.bz2
-#	cd insight-${INSIGHT_VER}
-#	mkdir build
-#	cd build
-#	../configure --target=${TOOLCHAIN_TARGET} --prefix=${TOOLCHAIN_PATH}
-#	make -j${NUM_JOBS} 2>&1 | tee make.log
-#	make install 2>&1 | tee install.log
-#	cd ${CORTEX_TOPDIR}
-#	touch .insight
-#fi
 
 cd ${CORTEX_TOPDIR}
 echo "Done. Stripping binaries..."
