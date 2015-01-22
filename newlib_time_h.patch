@@ -1,0 +1,15 @@
+--- newlib/libc/include/sys/time.h	2014-07-22 21:30:00.000000000 +0200
++++ newlib/libc/include/sys/new_time.h	2015-01-22 11:05:17.721254118 +0100
+@@ -76,10 +76,10 @@
+ 
+ int _EXFUN(gettimeofday, (struct timeval *__restrict __p,
+ 			  void *__restrict __tz));
+-#if __BSD_VISIBLE
++//#if __BSD_VISIBLE
+ int _EXFUN(settimeofday, (const struct timeval *, const struct timezone *));
+ int _EXFUN(adjtime, (const struct timeval *, struct timeval *));
+-#endif
++//#endif
+ int _EXFUN(utimes, (const char *__path, const struct timeval *__tvp));
+ int _EXFUN(getitimer, (int __which, struct itimerval *__value));
+ int _EXFUN(setitimer, (int __which, const struct itimerval *__restrict __value,
