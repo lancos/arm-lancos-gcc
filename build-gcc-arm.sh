@@ -1,33 +1,24 @@
 #!/bin/bash
 #
-# $Id: build-gcc-arm.sh,v 1.71 2014/12/31 10:37:57 claudio Exp $
+# $Id: build-gcc-arm.sh,v 1.72 2015/01/22 10:22:15 claudio Exp $
 #
-# @brief Build cross compiler for ARM Cortex M3 processor
+# @brief Build cross compiler for ARM Cortex M0/M3/M4 processor
 # 
-# Builds a bare-metal cross GNU toolchain targetting the ARM Cortex M3
+# Builds a bare-metal cross GNU toolchain targetting the ARM Cortex M0/M3/M4
 # microprocessor in EABI mode and using the newlib embedded C library.
 #
-# @version $Revision: 1.71 $
+# @version $Revision: 1.72 $
 # @author  Claudio Lanconelli
-# @note This script was tested on a Ubuntu Linux 8.04 (x86 32/64bit) and
-#       Ubuntu 9.04 but with GCC 4.2.4 (newer version seems to rise some errors)
-#       This script was tested also on a Fedora core 10 x86 32bit
-#		Tested on Kubuntu 32bit 10.04 (gcc 4.4.3)
+# @note This script was tested on Kubuntu 64bit 12.04 (gcc 4.6.3)
 #
 # @note Based on Leon Woestenberg <leon@sidebranch.com> http://www.sidebranch.com/
 #
 # @note You need to pre-install some Ubuntu packages on your host:
-# sudo apt-get install flex bison autoconf texinfo gcc-4.2
+# sudo apt-get install build-essential bison autoconf2.64 texinfo
 # and for GDB: 
 # sudo apt-get install libncurses5-dev 
 #
-# @note Richiede autoconf 2.65
-#
-# @note This script overrides gcc's autoconf 2.64 version dependency
-# to 2.65.
-#
-# @note aggiunto insight-gdb e modificato opzioni della newlib, nonche`
-# scaricamento della newlib da sito ufficiale.
+# @note Richiede autoconf 2.64
 
 #Impostiamo i flag per uscire al primo errore (anche usando il "make | tee")
 set -o errexit
@@ -42,7 +33,7 @@ set -o pipefail
 
 CORTEX_TOPDIR=`pwd`
 
-#Per ubuntu 8.04, 8.10 e 9.04 va bene il gcc-4.2, per altre distro (FC10) utilizzare il gcc standard
+#Per ubuntu 8.04, 8.10 e 9.04 va bene il gcc-4.2, per altre distro utilizzare il gcc standard
 # Non utilizzare gcc 4.3.2 che da` problemi a compilare GMP per macchine a 64bit (http://gmplib.org/)
 export CC=gcc
 #export CC=gcc-4.2
@@ -71,10 +62,18 @@ ENABLE_WCMB=yes
 AUTOCONF_VERMIN=2.64
 AUTOCONF_VERSION=`autoconf --version | head -n 1 | cut -d' ' -f4`
 
+if [ "${AUTOCONF_VERMIN}" != "${AUTOCONF_VERSION}" ]; then
+	AUTOCONF=autoconf${AUTOCONF_VERMIN}
+	AUTOCONF_VERSION=`${AUTOCONF} --version | head -n 1 | cut -d' ' -f4`
+else
+	AUTOCONF=autoconf
+fi
+
 AUTOCONF_VER_INT=`echo "scale=1; ${AUTOCONF_VERSION}*100.0" | bc | cut -d'.' -f 1`
 AUTOCONF_VERMIN_INT=`echo "scale=1; ${AUTOCONF_VERMIN}*100.0" | bc | cut -d'.' -f 1`
 
-if [ ${AUTOCONF_VERMIN_INT} -gt ${AUTOCONF_VER_INT} ]; then
+#if [ ${AUTOCONF_VERMIN_INT} -gt ${AUTOCONF_VER_INT} ]; then
+if [ ${AUTOCONF_VERMIN_INT} -ne ${AUTOCONF_VER_INT} ]; then
 	echo "!  Autoconf version = ${AUTOCONF_VERSION} (${AUTOCONF_VER_INT}), Required = ${AUTOCONF_VERMIN} (${AUTOCONF_VERMIN_INT})"
 	exit 1
 else
@@ -404,11 +403,11 @@ if [ ! -f .binutils ]; then
 	cd binutils-${BINUTILS_VER}
 #	patch -p0 < ../binutils-svc.patch	#necessario per binutils 2.21
 
-	if [ ${AUTOCONF_VERMIN} != ${AUTOCONF_VERSION} ]; then
-		# hack: allow autoconf version 2.65 instead of 2.64
-		sed -i "s@\(.*_GCC_AUTOCONF_VERSION.*\)${AUTOCONF_VERMIN}\(.*\)@\1${AUTOCONF_VERSION}\2@" config/override.m4
-	fi
-	autoconf
+#	if [ ${AUTOCONF_VERMIN} != ${AUTOCONF_VERSION} ]; then
+#		# hack: allow autoconf version 2.6x instead of 2.64
+#		sed -i "s@\(.*_GCC_AUTOCONF_VERSION.*\)${AUTOCONF_VERMIN}\(.*\)@\1${AUTOCONF_VERSION}\2@" config/override.m4
+#	fi
+	${AUTOCONF}
 	mkdir build
 	cd build
 	../configure --target=${TOOLCHAIN_TARGET} --prefix=${TOOLCHAIN_PATH} \
@@ -446,17 +445,11 @@ if [ ! -f .gcc ]; then
 	cd gcc-${GCC_VER}
 #	patch -p0 < ../gcc_multilib.patch
 
-	#cd libstdc++-v3
-	## uncomment AC_LIBTOOL_DLOPEN
-	#sed -i 's@^AC_LIBTOOL_DLOPEN.*@# AC_LIBTOOL_DLOPEN@' configure.ac
-	#autoconf
-	#cd ..
-
-	if [ ${AUTOCONF_VERMIN} != ${AUTOCONF_VERSION} ]; then
-		# hack: allow autoconf version 2.65 instead of 2.64
-		sed -i "s@\(.*_GCC_AUTOCONF_VERSION.*\)${AUTOCONF_VERMIN}\(.*\)@\1${AUTOCONF_VERSION}\2@" config/override.m4
-	fi
-	autoconf
+#	if [ ${AUTOCONF_VERMIN} != ${AUTOCONF_VERSION} ]; then
+#		# hack: allow autoconf version 2.6x instead of 2.64
+#		sed -i "s@\(.*_GCC_AUTOCONF_VERSION.*\)${AUTOCONF_VERMIN}\(.*\)@\1${AUTOCONF_VERSION}\2@" config/override.m4
+#	fi
+	${AUTOCONF}
 
 	mkdir build
 	cd build
@@ -548,11 +541,11 @@ if [ ! -f .newlib ]; then
 	#patch per prototipo settimeofday()
 	patch -p0 < ../newlib_time_h.patch
 
-	if [ ${AUTOCONF_VERMIN} != ${AUTOCONF_VERSION} ]; then
-		# hack: allow autoconf version 2.65 instead of 2.64
-		sed -i "s@\(.*_GCC_AUTOCONF_VERSION.*\)${AUTOCONF_VERMIN}\(.*\)@\1${AUTOCONF_VERSION}\2@" config/override.m4
-	fi
-	autoconf
+#	if [ ${AUTOCONF_VERMIN} != ${AUTOCONF_VERSION} ]; then
+#		# hack: allow autoconf version 2.6x instead of 2.64
+#		sed -i "s@\(.*_GCC_AUTOCONF_VERSION.*\)${AUTOCONF_VERMIN}\(.*\)@\1${AUTOCONF_VERSION}\2@" config/override.m4
+#	fi
+	${AUTOCONF}
 	mkdir build
 	cd build
 
@@ -658,12 +651,12 @@ do
 done
 
 cd ${CORTEX_TOPDIR}
-if [ ! -f .targz ]; then
-	echo "Done. Build TAR BZ2 package..."
+if [ ! -f .tarxz ]; then
+	echo "Done. Build TAR XZ package..."
 	cd ${TOOLCHAIN_PATH}/..
-	tar cfj ${TOOLCHAIN_NAME}.tar.bz2 ${TOOLCHAIN_NAME}
-	echo "TAR BZ2 Done"
+	tar cfJ ${TOOLCHAIN_NAME}.tar.xz ${TOOLCHAIN_NAME}
+	echo "TAR XZ Done"
 	cd ${CORTEX_TOPDIR}
-	touch .targz
+	touch .tarxz
 fi
 echo "Done."
