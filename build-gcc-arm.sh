@@ -1,13 +1,13 @@
 #!/bin/bash
 #
-# $Id: build-gcc-arm.sh,v 1.72 2015/01/22 10:22:15 claudio Exp $
+# $Id: build-gcc-arm.sh,v 1.73 2015/01/22 14:06:42 claudio Exp $
 #
 # @brief Build cross compiler for ARM Cortex M0/M3/M4 processor
 # 
 # Builds a bare-metal cross GNU toolchain targetting the ARM Cortex M0/M3/M4
 # microprocessor in EABI mode and using the newlib embedded C library.
 #
-# @version $Revision: 1.72 $
+# @version $Revision: 1.73 $
 # @author  Claudio Lanconelli
 # @note This script was tested on Kubuntu 64bit 12.04 (gcc 4.6.3)
 #
@@ -42,15 +42,15 @@ echo "gcc utilizzato: $CC"
 DOWNLOAD_DIR=${CORTEX_TOPDIR}/downloads
 
 BINUTILS_VER=2.25
-GDB_VER=7.8.1
-GCC_VER=4.9.2
+GDB_VER=7.9
+GCC_VER=5.1.0
 #GMP_VER=5.0.5 performance <--> 4.3.2 stable
 GMP_VER=5.1.3
 MPFR_VER=3.1.2
 MPC_VER=1.0.2
 #PPL_VER=1.0
-#ISL_VER=0.12.2
-CLOOG_VER=0.18.1
+ISL_VER=0.14.1
+#CLOOG_VER=0.18.1
 NEWLIB_VER=2.2.0
 LIBELF_VER=0.8.13
 EXPAT_VER=2.1.0
@@ -194,12 +194,12 @@ fi
 #if [ ! -f ${DOWNLOAD_DIR}/ppl-${PPL_VER}.tar.bz2 ]; then
 #	wget ${PPL_PATH}/ppl-${PPL_VER}.tar.bz2
 #fi
-#if [ ! -f ${DOWNLOAD_DIR}/isl-${ISL_VER}.tar.bz2 ]; then
-#	wget ${ISL_PATH}/isl-${ISL_VER}.tar.bz2
-#fi
-if [ ! -f ${DOWNLOAD_DIR}/cloog-${CLOOG_VER}.tar.gz ]; then
-	wget ${CLOOG_PATH}/cloog-${CLOOG_VER}.tar.gz
+if [ ! -f ${DOWNLOAD_DIR}/isl-${ISL_VER}.tar.bz2 ]; then
+	wget ${ISL_PATH}/isl-${ISL_VER}.tar.bz2
 fi
+#if [ ! -f ${DOWNLOAD_DIR}/cloog-${CLOOG_VER}.tar.gz ]; then
+#	wget ${CLOOG_PATH}/cloog-${CLOOG_VER}.tar.gz
+#fi
 if [ ! -f ${DOWNLOAD_DIR}/libelf-${LIBELF_VER}.tar.gz ]; then
 	wget ${LIBELF_PATH}/libelf-${LIBELF_VER}.tar.gz
 fi
@@ -336,48 +336,46 @@ fi
 #export CFLAGS=-I${CORTEX_TOPDIR}/static/include
 #export LDFLAGS=-L${CORTEX_TOPDIR}/static/lib
 
-#echo "Build ISL"
+echo "Build ISL"
+cd ${CORTEX_TOPDIR}
+if [ ! -f .libisl ]; then
+	rm -rf isl-${ISL_VER}
+	tar xfj ${DOWNLOAD_DIR}/isl-${ISL_VER}.tar.bz2
+	cd isl-${ISL_VER}
+	mkdir build
+	cd build
+	../configure --prefix=${CORTEX_TOPDIR}/static \
+		--with-gmp=build --with-gmp-builddir=${CORTEX_TOPDIR}/gmp-${GMP_VER}/build \
+		--disable-shared --enable-static 2>&1 | tee configure.log
+	make -j${NUM_JOBS} 2>&1 | tee make.log
+	make check 2>&1 | tee makecheck.log
+	make install 2>&1 | tee makeinstall.log
+	cd ${CORTEX_TOPDIR}
+	touch .libisl
+fi
+
+#echo "Build CLOOG"
 #cd ${CORTEX_TOPDIR}
-#if [ ! -f .libisl ]; then
-#	rm -rf isl-${ISL_VER}
-#	tar xfj ${DOWNLOAD_DIR}/isl-${ISL_VER}.tar.bz2
-#	cd isl-${ISL_VER}
+#if [ ! -f .libcloog ]; then
+#	rm -rf cloog-${CLOOG_VER}
+#	tar xfz ${DOWNLOAD_DIR}/cloog-${CLOOG_VER}.tar.gz
+#	cd cloog-${CLOOG_VER}
+#	patch -p1 < ../cloog_islver.patch
+#	if [ "${OSTYPE}" == "msys" ]; then
+#		patch -p1 < ../cloog_isl_mingw.patch
+#	fi
 #	mkdir build
 #	cd build
 #	../configure --prefix=${CORTEX_TOPDIR}/static \
 #		--with-gmp=build --with-gmp-builddir=${CORTEX_TOPDIR}/gmp-${GMP_VER}/build \
+#		--with-isl=bundled \
 #		--disable-shared --enable-static 2>&1 | tee configure.log
 #	make -j${NUM_JOBS} 2>&1 | tee make.log
 #	make check 2>&1 | tee makecheck.log
 #	make install 2>&1 | tee makeinstall.log
 #	cd ${CORTEX_TOPDIR}
-#	touch .libisl
+#	touch .libcloog
 #fi
-
-echo "Build CLOOG"
-cd ${CORTEX_TOPDIR}
-if [ ! -f .libcloog ]; then
-	rm -rf cloog-${CLOOG_VER}
-	tar xfz ${DOWNLOAD_DIR}/cloog-${CLOOG_VER}.tar.gz
-	cd cloog-${CLOOG_VER}
-	patch -p1 < ../cloog_islver.patch
-	if [ "${OSTYPE}" == "msys" ]; then
-		patch -p1 < ../cloog_isl_mingw.patch
-	fi
-	mkdir build
-	cd build
-	../configure --prefix=${CORTEX_TOPDIR}/static \
-		--with-gmp=build --with-gmp-builddir=${CORTEX_TOPDIR}/gmp-${GMP_VER}/build \
-		--with-isl=bundled \
-		--disable-shared --enable-static 2>&1 | tee configure.log
-
-#		--with-isl=build --with-isl-builddir=${CORTEX_TOPDIR}/isl-${ISL_VER}/build \
-	make -j${NUM_JOBS} 2>&1 | tee make.log
-	make check 2>&1 | tee makecheck.log
-	make install 2>&1 | tee makeinstall.log
-	cd ${CORTEX_TOPDIR}
-	touch .libcloog
-fi
 
 #echo "Build ZLIB"
 #cd ${CORTEX_TOPDIR}
@@ -425,7 +423,6 @@ if [ ! -f .binutils ]; then
 
 #	--with-sysroot=
 #	--enable-plugins --disable-sim --disable-readline --disable-libdecnumber --disable-gdb
-#		--with-ppl=${CORTEX_TOPDIR}/static --with-cloog=${CORTEX_TOPDIR}/static \
 	make -j${NUM_JOBS} all 2>&1 | tee make.log
 	make install 2>&1 | tee install.log
 	cd $CORTEX_TOPDIR
@@ -490,13 +487,11 @@ if [ ! -f .gcc ]; then
 		--with-mpc=${CORTEX_TOPDIR}/static \
 		--with-libelf=${CORTEX_TOPDIR}/static \
 		--with-isl=${CORTEX_TOPDIR}/static \
-		--with-cloog=${CORTEX_TOPDIR}/static \
 		2>&1 | tee configure.log
 
 #	--enable-target-optspace
 #	--with-cpu=cortex-m3 --with-mode=thumb --with-tune=cortex-m3 --with-float=soft
 #	--without-included-gettext ??
-#	--enable-checking=release
 #	--enable-stage1-checking=all
 #	--enable-version-specific-runtime-libs
 
@@ -580,8 +575,6 @@ if [ ! -f .newlib ]; then
 		--with-mpfr=${CORTEX_TOPDIR}/static \
 		--with-mpc=${CORTEX_TOPDIR}/static \
 		--with-libelf=${CORTEX_TOPDIR}/static \
-		--with-ppl=${CORTEX_TOPDIR}/static \
-		--with-cloog=${CORTEX_TOPDIR}/static \
 		2>&1 | tee configure.log
 
 # --enable-target-optspace
@@ -627,8 +620,6 @@ if [ ! -f .gdb ]; then
 		--with-mpfr=${CORTEX_TOPDIR}/static \
 		--with-mpc=${CORTEX_TOPDIR}/static \
 		--with-libelf=${CORTEX_TOPDIR}/static \
-		--with-ppl=${CORTEX_TOPDIR}/static \
-		--with-cloog=${CORTEX_TOPDIR}/static \
 		--with-libexpat-prefix=${CORTEX_TOPDIR}/static \
 		2>&1 | tee configure.log
 	make -j${NUM_JOBS} 2>&1 | tee make.log
