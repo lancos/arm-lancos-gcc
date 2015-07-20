@@ -1,13 +1,13 @@
 #!/bin/bash
 #
-# $Id: build-gcc-arm.sh,v 1.73 2015/01/22 14:06:42 claudio Exp $
+# $Id: build-gcc-arm.sh,v 1.74 2015/04/24 23:42:54 claudio Exp $
 #
 # @brief Build cross compiler for ARM Cortex M0/M3/M4 processor
 # 
 # Builds a bare-metal cross GNU toolchain targetting the ARM Cortex M0/M3/M4
 # microprocessor in EABI mode and using the newlib embedded C library.
 #
-# @version $Revision: 1.73 $
+# @version $Revision: 1.74 $
 # @author  Claudio Lanconelli
 # @note This script was tested on Kubuntu 64bit 12.04 (gcc 4.6.3)
 #
@@ -42,8 +42,8 @@ echo "gcc utilizzato: $CC"
 DOWNLOAD_DIR=${CORTEX_TOPDIR}/downloads
 
 BINUTILS_VER=2.25
-GDB_VER=7.9
-GCC_VER=5.1.0
+GDB_VER=7.9.1
+GCC_VER=5.2.0
 #GMP_VER=5.0.5 performance <--> 4.3.2 stable
 GMP_VER=5.1.3
 MPFR_VER=3.1.2
@@ -51,7 +51,7 @@ MPC_VER=1.0.2
 #PPL_VER=1.0
 ISL_VER=0.14.1
 #CLOOG_VER=0.18.1
-NEWLIB_VER=2.2.0
+NEWLIB_VER=2.2.0.20150623
 LIBELF_VER=0.8.13
 EXPAT_VER=2.1.0
 #ZLIB_VER=1.2.8
