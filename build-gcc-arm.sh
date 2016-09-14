@@ -1,13 +1,13 @@
 #!/bin/bash
 #
-# $Id: build-gcc-arm.sh,v 1.76 2016/01/03 23:17:13 claudio Exp $
+# $Id: build-gcc-arm.sh,v 1.77 2016/07/27 15:47:33 claudio Exp $
 #
 # @brief Build cross compiler for ARM Cortex M0/M3/M4 processor
 # 
 # Builds a bare-metal cross GNU toolchain targetting the ARM Cortex M0/M3/M4
 # microprocessor in EABI mode and using the newlib embedded C library.
 #
-# @version $Revision: 1.76 $
+# @version $Revision: 1.77 $
 # @author  Claudio Lanconelli
 # @note This script was tested on Kubuntu 64bit 12.04 (gcc 4.6.3)
 #
@@ -41,19 +41,19 @@ echo "gcc utilizzato: $CC"
 
 DOWNLOAD_DIR=${CORTEX_TOPDIR}/downloads
 
-BINUTILS_VER=2.26.1
+BINUTILS_VER=2.27
 GDB_VER=7.11.1
-GCC_VER=5.4.0
+GCC_VER=6.2.0
 #GMP_VER=5.0.5 performance <--> 4.3.2 stable
-GMP_VER=5.1.3
-MPFR_VER=3.1.2
-MPC_VER=1.0.2
+GMP_VER=6.1.1
+MPFR_VER=3.1.4
+MPC_VER=1.0.3
 #PPL_VER=1.0
-ISL_VER=0.14.1
+ISL_VER=0.17.1
 #CLOOG_VER=0.18.1
-NEWLIB_VER=2.4.0
+NEWLIB_VER=2.4.0.20160527
 LIBELF_VER=0.8.13
-EXPAT_VER=2.1.0
+EXPAT_VER=2.2.0
 #ZLIB_VER=1.2.8
 
 #ENABLE_WCMB=no
@@ -127,9 +127,9 @@ if [ "$1" == "local" ]; then
 	LIBELF_PATH=${LOCAL_PATH}
 	ZLIB_PATH=${LOCAL_PATH}
 
-	if [ ! -f ${DOWNLOAD_DIR}/expat-${EXPAT_VER}.tar.gz ]; then
+	if [ ! -f ${DOWNLOAD_DIR}/expat-${EXPAT_VER}.tar.bz2 ]; then
 		cd ${DOWNLOAD_DIR}
-		wget ${LOCAL_PATH}/expat-${EXPAT_VER}.tar.gz
+		wget ${LOCAL_PATH}/expat-${EXPAT_VER}.tar.bz2
 	fi
 else
 	#Usa percorsi remoti (tramite wget)
@@ -153,13 +153,13 @@ else
 	ISL_PATH=http://isl.gforge.inria.fr
 	CLOOG_PATH=ftp://gcc.gnu.org/pub/gcc/infrastructure
 	LIBELF_PATH=http://www.mr511.de/software
-	EXPAT_PATH=http://sourceforge.net/projects/expat/files/expat/${EXPAT_VER}/expat-${EXPAT_VER}.tar.gz
+	EXPAT_PATH=http://sourceforge.net/projects/expat/files/expat/${EXPAT_VER}/expat-${EXPAT_VER}.tar.bz2
 	ZLIB_PATH=http://zlib.net
 
-	if [ ! -f ${DOWNLOAD_DIR}/expat-${EXPAT_VER}.tar.gz ]; then
+	if [ ! -f ${DOWNLOAD_DIR}/expat-${EXPAT_VER}.tar.bz2 ]; then
 		cd ${DOWNLOAD_DIR}
 		wget ${EXPAT_PATH}/download
-		mv download expat-${EXPAT_VER}.tar.gz
+		mv download expat-${EXPAT_VER}.tar.bz2
 	fi
 
 	#Snapshots path
@@ -229,7 +229,7 @@ echo "Build EXPAT"
 cd ${CORTEX_TOPDIR}
 if [ ! -f .libexpat ]; then
 	rm -rf expat-${EXPAT_VER}
-	tar xfz ${DOWNLOAD_DIR}/expat-${EXPAT_VER}.tar.gz
+	tar xfj ${DOWNLOAD_DIR}/expat-${EXPAT_VER}.tar.bz2
 	cd expat-${EXPAT_VER}
 	mkdir build
 	cd build
