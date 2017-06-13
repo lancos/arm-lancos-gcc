@@ -1,20 +1,20 @@
 #!/bin/bash
 #
-# $Id: build-gcc-arm.sh,v 1.78 2016/09/14 12:50:56 claudio Exp $
+# $Id: build-gcc-arm.sh,v 1.79 2017/01/10 18:37:35 claudio Exp $
 #
 # @brief Build cross compiler for ARM Cortex M0/M3/M4 processor
 # 
 # Builds a bare-metal cross GNU toolchain targetting the ARM Cortex M0/M3/M4
 # microprocessor in EABI mode and using the newlib embedded C library.
 #
-# @version $Revision: 1.78 $
+# @version $Revision: 1.79 $
 # @author  Claudio Lanconelli
 # @note This script was tested on Kubuntu 64bit 12.04 (gcc 4.6.3)
 #
 # @note Based on Leon Woestenberg <leon@sidebranch.com> http://www.sidebranch.com/
 #
 # @note You need to pre-install some Ubuntu packages on your host:
-# sudo apt-get install build-essential bison autoconf2.64 texinfo
+# sudo apt-get install build-essential bison autoconf2.64 texinfo zlib1g-dev
 # and for GDB: 
 # sudo apt-get install libncurses5-dev 
 #
@@ -41,16 +41,16 @@ echo "gcc utilizzato: $CC"
 
 DOWNLOAD_DIR=${CORTEX_TOPDIR}/downloads
 
-BINUTILS_VER=2.27
-GDB_VER=7.12
-GCC_VER=6.3.0
+BINUTILS_VER=2.28
+GDB_VER=8.0
+GCC_VER=7.1.0
 GMP_VER=6.1.2
 MPFR_VER=3.1.5
 MPC_VER=1.0.3
 #PPL_VER=1.0
 ISL_VER=0.18
 #CLOOG_VER=0.18.1
-NEWLIB_VER=2.5.0
+NEWLIB_VER=2.5.0.20170519
 LIBELF_VER=0.8.13
 EXPAT_VER=2.2.0
 #ZLIB_VER=1.2.8
