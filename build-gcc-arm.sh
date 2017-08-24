@@ -1,13 +1,13 @@
 #!/bin/bash
 #
-# $Id: build-gcc-arm.sh,v 1.79 2017/01/10 18:37:35 claudio Exp $
+# $Id: build-gcc-arm.sh,v 1.80 2017/06/13 10:53:44 claudio Exp $
 #
 # @brief Build cross compiler for ARM Cortex M0/M3/M4 processor
 # 
 # Builds a bare-metal cross GNU toolchain targetting the ARM Cortex M0/M3/M4
 # microprocessor in EABI mode and using the newlib embedded C library.
 #
-# @version $Revision: 1.79 $
+# @version $Revision: 1.80 $
 # @author  Claudio Lanconelli
 # @note This script was tested on Kubuntu 64bit 12.04 (gcc 4.6.3)
 #
@@ -41,9 +41,9 @@ echo "gcc utilizzato: $CC"
 
 DOWNLOAD_DIR=${CORTEX_TOPDIR}/downloads
 
-BINUTILS_VER=2.28
+BINUTILS_VER=2.28.1
 GDB_VER=8.0
-GCC_VER=7.1.0
+GCC_VER=7.2.0
 GMP_VER=6.1.2
 MPFR_VER=3.1.5
 MPC_VER=1.0.3
@@ -175,8 +175,8 @@ fi
 if [ ! -f ${DOWNLOAD_DIR}/gdb-${GDB_VER}.tar.xz ]; then
 	wget ${GDB_PATH}/gdb-${GDB_VER}.tar.xz
 fi
-if [ ! -f ${DOWNLOAD_DIR}/gcc-${GCC_VER}.tar.bz2 ]; then
-	wget ${GCC_PATH}/gcc-${GCC_VER}.tar.bz2
+if [ ! -f ${DOWNLOAD_DIR}/gcc-${GCC_VER}.tar.xz ]; then
+	wget ${GCC_PATH}/gcc-${GCC_VER}.tar.xz
 fi
 if [ ! -f ${DOWNLOAD_DIR}/gmp-${GMP_VER}.tar.bz2 ]; then
 	wget ${GMP_PATH}/gmp-${GMP_VER}.tar.bz2
@@ -435,7 +435,7 @@ echo "Build GCC (first half)"
 cd ${CORTEX_TOPDIR}
 if [ ! -f .gcc ]; then
 	rm -rf gcc-${GCC_VER}
-	tar xfj ${DOWNLOAD_DIR}/gcc-${GCC_VER}.tar.bz2
+	tar xfJ ${DOWNLOAD_DIR}/gcc-${GCC_VER}.tar.xz
 #	patch -p0 <gcc_libgcc_divide_exceptions.patch
 	cp t-arm-elf.txt gcc-${GCC_VER}/gcc/config/arm/t-arm-elf
 	cd gcc-${GCC_VER}
