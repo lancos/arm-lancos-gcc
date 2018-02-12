@@ -1,13 +1,13 @@
 #!/bin/bash
 #
-# $Id: build-gcc-arm.sh,v 1.81 2017/08/24 15:36:45 claudio Exp $
+# $Id: build-gcc-arm.sh,v 1.82 2018/02/05 14:01:14 claudio Exp $
 #
 # @brief Build cross compiler for ARM Cortex M0/M3/M4 processor
 # 
 # Builds a bare-metal cross GNU toolchain targetting the ARM Cortex M0/M3/M4
 # microprocessor in EABI mode and using the newlib embedded C library.
 #
-# @version $Revision: 1.81 $
+# @version $Revision: 1.82 $
 # @author  Claudio Lanconelli
 # @note This script was tested on Kubuntu 64bit 12.04 (gcc 4.6.3)
 #
@@ -55,8 +55,8 @@ LIBELF_VER=0.8.13
 EXPAT_VER=2.2.0
 #ZLIB_VER=1.2.8
 
-#ENABLE_WCMB=no
-ENABLE_WCMB=yes
+ENABLE_WCMB=no
+#ENABLE_WCMB=yes
 
 AUTOCONF_VERMIN=2.64
 AUTOCONF_VERSION=`autoconf --version | head -n 1 | cut -d' ' -f4`
@@ -169,8 +169,8 @@ fi
 
 #Inizia download (solo se necessario)
 cd ${DOWNLOAD_DIR}
-if [ ! -f ${DOWNLOAD_DIR}/binutils-${BINUTILS_VER}.tar.bz2 ]; then
-	wget ${BINUTILS_PATH}/binutils-${BINUTILS_VER}.tar.bz2
+if [ ! -f ${DOWNLOAD_DIR}/binutils-${BINUTILS_VER}.tar.xz ]; then
+	wget ${BINUTILS_PATH}/binutils-${BINUTILS_VER}.tar.xz
 fi
 if [ ! -f ${DOWNLOAD_DIR}/gdb-${GDB_VER}.tar.xz ]; then
 	wget ${GDB_PATH}/gdb-${GDB_VER}.tar.xz
@@ -178,11 +178,11 @@ fi
 if [ ! -f ${DOWNLOAD_DIR}/gcc-${GCC_VER}.tar.xz ]; then
 	wget ${GCC_PATH}/gcc-${GCC_VER}.tar.xz
 fi
-if [ ! -f ${DOWNLOAD_DIR}/gmp-${GMP_VER}.tar.bz2 ]; then
-	wget ${GMP_PATH}/gmp-${GMP_VER}.tar.bz2
+if [ ! -f ${DOWNLOAD_DIR}/gmp-${GMP_VER}.tar.xz ]; then
+	wget ${GMP_PATH}/gmp-${GMP_VER}.tar.xz
 fi
-if [ ! -f ${DOWNLOAD_DIR}/mpfr-${MPFR_VER}.tar.bz2 ]; then
-	wget ${MPFR_PATH}/mpfr-${MPFR_VER}.tar.bz2
+if [ ! -f ${DOWNLOAD_DIR}/mpfr-${MPFR_VER}.tar.xz ]; then
+	wget ${MPFR_PATH}/mpfr-${MPFR_VER}.tar.xz
 fi
 if [ ! -f ${DOWNLOAD_DIR}/newlib-${NEWLIB_VER}.tar.gz ]; then
 	wget ${NEWLIB_PATH}/newlib-${NEWLIB_VER}.tar.gz
@@ -260,7 +260,7 @@ echo "Build GMP"
 cd ${CORTEX_TOPDIR}
 if [ ! -f .libgmp ]; then
 	rm -rf gmp-${GMP_VER}
-	tar xfj ${DOWNLOAD_DIR}/gmp-${GMP_VER}.tar.bz2
+	tar xfJ ${DOWNLOAD_DIR}/gmp-${GMP_VER}.tar.xz
 	cd gmp-${GMP_VER}
 	mkdir build
 	cd build
@@ -284,13 +284,14 @@ echo "Build MPFR"
 cd ${CORTEX_TOPDIR}
 if [ ! -f .libmpfr ]; then
 	rm -rf mpfr-${MPFR_VER}
-	tar xfj ${DOWNLOAD_DIR}/mpfr-${MPFR_VER}.tar.bz2
+	tar xfJ ${DOWNLOAD_DIR}/mpfr-${MPFR_VER}.tar.xz
 	cd mpfr-${MPFR_VER}
 	mkdir build
 	cd build
 	../configure --prefix=${CORTEX_TOPDIR}/static --with-gmp=${CORTEX_TOPDIR}/static --enable-thread-safe \
 		--disable-shared --enable-static 2>&1 | tee configure.log
 	make -j${NUM_JOBS} 2>&1 | tee make.log
+	make check 2>&1 | tee makecheck.log
 	make install 2>&1 | tee makeinstall.log
 	cd ${CORTEX_TOPDIR}
 	touch .libmpfr
@@ -396,7 +397,7 @@ echo "Build BINUTILS"
 cd ${CORTEX_TOPDIR}
 if [ ! -f .binutils ]; then
 	rm -rf binutils-${BINUTILS_VER}
-	tar xfj ${DOWNLOAD_DIR}/binutils-${BINUTILS_VER}.tar.bz2
+	tar xfJ ${DOWNLOAD_DIR}/binutils-${BINUTILS_VER}.tar.xz
 	cd binutils-${BINUTILS_VER}
 #	patch -p0 < ../binutils-svc.patch	#necessario per binutils 2.21
 
@@ -524,13 +525,13 @@ if [ ! -f .newlib ]; then
 #	patch -p0 <newlib_iconv_ccs.patch
 	cd newlib-${NEWLIB_VER}
 	# Le patch stpcpy e fseeko sono necessarie solo in elix=1
-	if [ "${ENABLE_WCMB}" == "no" ]; then
-		patch -p0 < ../newlib_stpcpy.patch
-		patch -p0 < ../newlib_fseeko.patch
-#	else
+	#if [ "${ENABLE_WCMB}" == "no" ]; then
+	#	patch -p0 < ../newlib_stpcpy.patch
+	#	patch -p0 < ../newlib_fseeko.patch
+	#else
 	#	patch -p1 < ../newlib_locale.patch
 	#	patch -p1 < ../newlib_locale_lctype.patch
-	fi
+	#fi
 #	patch -p1 < ../newlib_Fix-wrong-path-to-config-default.mh.patch
 	#patch per prototipo settimeofday()
 	patch -p0 < ../newlib_time_h.patch
@@ -547,7 +548,7 @@ if [ ! -f .newlib ]; then
 	if [ "${ENABLE_WCMB}" == "yes" ]; then
 		NEWLIB_CONF_PARAM="--enable-newlib-elix-level=2 --enable-newlib-mb --enable-newlib-wide-orient --enable-newlib-iconv --enable-newlib-iconv-external-ccs --enable-newlib-iconv-encodings=iso_8859_1,iso8859_15,cp1252,utf8,big5 "
 	else
-		NEWLIB_CONF_PARAM="--enable-newlib-elix-level=1 --disable-newlib-wide-orient "
+		NEWLIB_CONF_PARAM="--enable-newlib-elix-level=2 --disable-newlib-wide-orient "
 	fi
 	#note: this needs arm-*-{eabi|elf}-cc to exist or link to arm-*-{eabi|elf}-gcc
 	../configure --target=${TOOLCHAIN_TARGET} --prefix=${TOOLCHAIN_PATH} \
