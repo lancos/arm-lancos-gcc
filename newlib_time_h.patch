@@ -1,12 +1,12 @@
---- newlib/libc/include/sys/time.h	2015-06-24 13:24:01.000000000 +0200
-+++ newlib/libc/include/sys/new_time.h	2015-07-17 00:34:46.020412161 +0200
-@@ -426,8 +426,8 @@
- int _EXFUN(futimes, (int, const struct timeval *));
- int _EXFUN(futimesat, (int, const char *, const struct timeval [2]));
- int _EXFUN(lutimes, (const char *, const struct timeval *));
--int _EXFUN(settimeofday, (const struct timeval *, const struct timezone *));
+--- newlib/libc/include/sys/time.h	2018-02-26 20:39:48.000000000 +0100
++++ newlib/libc/include/sys/new_time.h	2018-03-30 14:48:34.967448212 +0200
+@@ -274,8 +274,8 @@
+ int adjtime (const struct timeval *, struct timeval *);
+ int futimes (int, const struct timeval *);
+ int lutimes (const char *, const struct timeval *);
+-int settimeofday (const struct timeval *, const struct timezone *);
  #endif
-+int _EXFUN(settimeofday, (const struct timeval *, const struct timezone *));
++int settimeofday (const struct timeval *, const struct timezone *);
  
- #if __XSI_VISIBLE
- int _EXFUN(getitimer, (int __which, struct itimerval *__value));
+ #if __MISC_VISIBLE || __XSI_VISIBLE
+ int getitimer (int __which, struct itimerval *__value);
