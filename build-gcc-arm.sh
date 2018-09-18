@@ -1,13 +1,13 @@
 #!/bin/bash
 #
-# $Id: build-gcc-arm.sh,v 1.84 2018/03/30 14:53:06 claudio Exp $
+# $Id: build-gcc-arm.sh,v 1.85 2018/06/07 14:05:34 claudio Exp $
 #
 # @brief Build cross compiler for ARM Cortex M0/M3/M4 processor
 # 
 # Builds a bare-metal cross GNU toolchain targetting the ARM Cortex M0/M3/M4
 # microprocessor in EABI mode and using the newlib embedded C library.
 #
-# @version $Revision: 1.84 $
+# @version $Revision: 1.85 $
 # @author  Claudio Lanconelli
 # @note This script was tested on Kubuntu 64bit 12.04 (gcc 4.6.3)
 #
@@ -41,16 +41,16 @@ echo "gcc utilizzato: $CC"
 
 DOWNLOAD_DIR=${CORTEX_TOPDIR}/downloads
 
-BINUTILS_VER=2.30
-GDB_VER=8.1
-GCC_VER=8.1.0
+BINUTILS_VER=2.31
+GDB_VER=8.2
+GCC_VER=8.2.0
 GMP_VER=6.1.2
 MPFR_VER=4.0.1
 MPC_VER=1.1.0
 #PPL_VER=1.0
 ISL_VER=0.19
 #CLOOG_VER=0.18.1
-NEWLIB_VER=3.0.0.20180226
+NEWLIB_VER=3.0.0.20180831
 LIBELF_VER=0.8.13
 EXPAT_VER=2.2.3
 #ZLIB_VER=1.2.8
@@ -58,7 +58,7 @@ EXPAT_VER=2.2.3
 ENABLE_WCMB=no
 #ENABLE_WCMB=yes
 
-AUTOCONF_VERMIN=2.64
+AUTOCONF_VERMIN=2.69
 AUTOCONF_VERSION=`autoconf --version | head -n 1 | cut -d' ' -f4`
 
 if [ "${AUTOCONF_VERMIN}" != "${AUTOCONF_VERSION}" ]; then
@@ -427,6 +427,27 @@ if [ ! -f .binutils ]; then
 	make install 2>&1 | tee install.log
 	cd $CORTEX_TOPDIR
 	touch .binutils
+fi
+
+AUTOCONF_VERMIN=2.64
+AUTOCONF_VERSION=`autoconf --version | head -n 1 | cut -d' ' -f4`
+
+if [ "${AUTOCONF_VERMIN}" != "${AUTOCONF_VERSION}" ]; then
+	AUTOCONF=autoconf${AUTOCONF_VERMIN}
+	AUTOCONF_VERSION=`${AUTOCONF} --version | head -n 1 | cut -d' ' -f4`
+else
+	AUTOCONF=autoconf
+fi
+
+AUTOCONF_VER_INT=`echo "scale=1; ${AUTOCONF_VERSION}*100.0" | bc | cut -d'.' -f 1`
+AUTOCONF_VERMIN_INT=`echo "scale=1; ${AUTOCONF_VERMIN}*100.0" | bc | cut -d'.' -f 1`
+
+#if [ ${AUTOCONF_VERMIN_INT} -gt ${AUTOCONF_VER_INT} ]; then
+if [ ${AUTOCONF_VERMIN_INT} -ne ${AUTOCONF_VER_INT} ]; then
+	echo "!  Autoconf version = ${AUTOCONF_VERSION} (${AUTOCONF_VER_INT}), Required = ${AUTOCONF_VERMIN} (${AUTOCONF_VERMIN_INT})"
+	exit 1
+else
+	echo "Ok Autoconf version = ${AUTOCONF_VERSION} (${AUTOCONF_VER_INT}), Required = ${AUTOCONF_VERMIN} (${AUTOCONF_VERMIN_INT})"
 fi
 
 #Aggiungiamo il path del nuovo compilatore
