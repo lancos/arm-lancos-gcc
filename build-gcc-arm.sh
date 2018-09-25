@@ -1,13 +1,13 @@
 #!/bin/bash
 #
-# $Id: build-gcc-arm.sh,v 1.85 2018/06/07 14:05:34 claudio Exp $
+# $Id: build-gcc-arm.sh,v 1.86 2018/09/18 22:57:28 claudio Exp $
 #
 # @brief Build cross compiler for ARM Cortex M0/M3/M4 processor
 # 
 # Builds a bare-metal cross GNU toolchain targetting the ARM Cortex M0/M3/M4
 # microprocessor in EABI mode and using the newlib embedded C library.
 #
-# @version $Revision: 1.85 $
+# @version $Revision: 1.86 $
 # @author  Claudio Lanconelli
 # @note This script was tested on Kubuntu 64bit 12.04 (gcc 4.6.3)
 #
@@ -41,7 +41,7 @@ echo "gcc utilizzato: $CC"
 
 DOWNLOAD_DIR=${CORTEX_TOPDIR}/downloads
 
-BINUTILS_VER=2.31
+BINUTILS_VER=2.31.1
 GDB_VER=8.2
 GCC_VER=8.2.0
 GMP_VER=6.1.2
@@ -52,8 +52,8 @@ ISL_VER=0.19
 #CLOOG_VER=0.18.1
 NEWLIB_VER=3.0.0.20180831
 LIBELF_VER=0.8.13
-EXPAT_VER=2.2.3
-#ZLIB_VER=1.2.8
+EXPAT_VER=2.2.5
+#ZLIB_VER=1.2.11
 
 ENABLE_WCMB=no
 #ENABLE_WCMB=yes
@@ -234,8 +234,8 @@ if [ ! -f .libexpat ]; then
 	cd build
 	../configure --prefix=${CORTEX_TOPDIR}/static --disable-shared \
 		2>&1 | tee configure.log
-	make buildlib -j${NUM_JOBS} 2>&1 | tee make.log
-	make installlib 2>&1 | tee install.log
+	make -j${NUM_JOBS} 2>&1 | tee make.log
+	make install 2>&1 | tee install.log
 	cd ${CORTEX_TOPDIR}
 	touch .libexpat
 fi
@@ -271,7 +271,7 @@ if [ ! -f .libgmp ]; then
 		GMPABI=
 	fi
 	echo "Build GMP with ${GMPABI}"
-	../configure ${GMPABI} --prefix=${CORTEX_TOPDIR}/static --enable-cxx --enable-fft --enable-mpbsd \
+	../configure ${GMPABI} --prefix=${CORTEX_TOPDIR}/static --enable-cxx --enable-fft \
 		--disable-shared --enable-static 2>&1 | tee configure.log
 	make -j${NUM_JOBS} 2>&1 | tee make.log
 	make check 2>&1 | tee makecheck.log
@@ -415,10 +415,11 @@ if [ ! -f .binutils ]; then
 		--with-gnu-as \
 		--with-gnu-ld \
 		--disable-nls \
-		--with-float=soft \
+		--with-system-zlib \
 		--with-gmp=${CORTEX_TOPDIR}/static \
 		--with-mpfr=${CORTEX_TOPDIR}/static \
 		--with-mpc=${CORTEX_TOPDIR}/static \
+		--with-isl=${CORTEX_TOPDIR}/static \
 		2>&1 | tee configure.log
 
 #	--with-sysroot=
@@ -459,7 +460,7 @@ if [ ! -f .gcc ]; then
 	rm -rf gcc-${GCC_VER}
 	tar xfJ ${DOWNLOAD_DIR}/gcc-${GCC_VER}.tar.xz
 #	patch -p0 <gcc_libgcc_divide_exceptions.patch
-	cp t-arm-elf.txt gcc-${GCC_VER}/gcc/config/arm/t-arm-elf
+#	cp t-arm-elf.txt gcc-${GCC_VER}/gcc/config/arm/t-arm-elf
 	cd gcc-${GCC_VER}
 #	patch -p0 < ../gcc_multilib.patch
 
@@ -478,9 +479,7 @@ if [ ! -f .gcc ]; then
 		GCC_CONF_OPTS="--with-system-zlib"
 	fi
 	../configure --target=${TOOLCHAIN_TARGET} --prefix=${TOOLCHAIN_PATH} \
-		--with-mode=thumb \
 		--enable-interwork \
-		--with-float=soft \
 		--enable-multilib \
 		--enable-languages="c,c++" \
 		--with-newlib \
@@ -497,10 +496,13 @@ if [ ! -f .gcc ]; then
 		--disable-libquadmath \
 		--disable-libssp \
 		--disable-libstdcxx-pch \
+		--disable-libada \
+		--disable-libvtv \
 		--disable-nls \
 		--disable-shared \
 		--disable-threads \
 		--disable-tls \
+		--disable-decimal-float \
 		--with-host-libstdcxx='-lstdc++' ${GCC_CONF_OPTS} \
 		--disable-__cxa_atexit \
 		--with-gmp=${CORTEX_TOPDIR}/static \
@@ -508,6 +510,8 @@ if [ ! -f .gcc ]; then
 		--with-mpc=${CORTEX_TOPDIR}/static \
 		--with-libelf=${CORTEX_TOPDIR}/static \
 		--with-isl=${CORTEX_TOPDIR}/static \
+		--with-multilib-list=rmprofile \
+		--with-pkgversion=lancos201809
 		2>&1 | tee configure.log
 
 #	--enable-target-optspace
@@ -586,6 +590,7 @@ if [ ! -f .newlib ]; then
 		--disable-newlib-fvwrite-in-streamio \
 		--disable-newlib-fseek-optimization \
 		--disable-newlib-unbuf-stream-opt \
+		--enable-newlib-retargetable-locking \
 		--disable-shared \
 		--disable-nls \
 		--with-gnu-as \
