@@ -1,13 +1,13 @@
 #!/bin/bash
 #
-# $Id: build-gcc-arm.sh,v 1.87 2018/09/25 23:51:13 claudio Exp $
+# $Id: build-gcc-arm.sh,v 1.88 2018/09/26 09:23:36 claudio Exp $
 #
 # @brief Build cross compiler for ARM Cortex M0/M3/M4 processor
 # 
 # Builds a bare-metal cross GNU toolchain targetting the ARM Cortex M0/M3/M4
 # microprocessor in EABI mode and using the newlib embedded C library.
 #
-# @version $Revision: 1.87 $
+# @version $Revision: 1.88 $
 # @author  Claudio Lanconelli
 # @note This script was tested on Kubuntu 64bit 12.04 (gcc 4.6.3)
 #
@@ -462,7 +462,7 @@ if [ ! -f .gcc ]; then
 #	patch -p0 <gcc_libgcc_divide_exceptions.patch
 #	cp t-arm-elf.txt gcc-${GCC_VER}/gcc/config/arm/t-arm-elf
 	cd gcc-${GCC_VER}
-#	patch -p0 < ../gcc_multilib.patch
+	patch -p0 < ../gcc_multilib.patch
 
 #	if [ ${AUTOCONF_VERMIN} != ${AUTOCONF_VERSION} ]; then
 #		# hack: allow autoconf version 2.6x instead of 2.64
@@ -621,7 +621,7 @@ cd ${CORTEX_TOPDIR}
 if [ ! -f .gcc-full ]; then
 	cd gcc-${GCC_VER}/build
 	make -j${NUM_JOBS} all 2>&1 | tee make-full.log
-	make install 2>&1 | tee install-full.log
+	make install-strip 2>&1 | tee install-full.log
 	cd ${CORTEX_TOPDIR}
 	touch .gcc-full
 fi
