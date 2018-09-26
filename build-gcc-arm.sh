@@ -1,13 +1,13 @@
 #!/bin/bash
 #
-# $Id: build-gcc-arm.sh,v 1.86 2018/09/18 22:57:28 claudio Exp $
+# $Id: build-gcc-arm.sh,v 1.87 2018/09/25 23:51:13 claudio Exp $
 #
 # @brief Build cross compiler for ARM Cortex M0/M3/M4 processor
 # 
 # Builds a bare-metal cross GNU toolchain targetting the ARM Cortex M0/M3/M4
 # microprocessor in EABI mode and using the newlib embedded C library.
 #
-# @version $Revision: 1.86 $
+# @version $Revision: 1.87 $
 # @author  Claudio Lanconelli
 # @note This script was tested on Kubuntu 64bit 12.04 (gcc 4.6.3)
 #
@@ -84,7 +84,7 @@ if [ "${ENABLE_WCMB}" == "yes" ]; then
 	TOOLCHAIN_NAME="${TOOLCHAIN_NAME}-wcmb"
 fi
 
-TOOLCHAINLIB_NAME="gmp${GMP_VER}-mpfr${MPFR_VER}-mpc${MPC_VER}-cloog${CLOOG_VER}-libelf${LIBELF_VER}-expat${EXPAT_VER}"
+TOOLCHAINLIB_NAME="gmp${GMP_VER}-mpfr${MPFR_VER}-mpc${MPC_VER}-isl${ISL_VER}-libelf${LIBELF_VER}-expat${EXPAT_VER}"
 echo "Build toolchain ${TOOLCHAIN_NAME}"
 echo "toolchain libs ${TOOLCHAINLIB_NAME}"
 
