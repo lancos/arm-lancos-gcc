@@ -1,13 +1,13 @@
 #!/bin/bash
 #
-# $Id: build-gcc-arm.sh,v 1.88 2018/09/26 09:23:36 claudio Exp $
+# $Id: build-gcc-arm.sh,v 1.89 2018/09/26 23:40:25 claudio Exp $
 #
 # @brief Build cross compiler for ARM Cortex M0/M3/M4 processor
 # 
 # Builds a bare-metal cross GNU toolchain targetting the ARM Cortex M0/M3/M4
 # microprocessor in EABI mode and using the newlib embedded C library.
 #
-# @version $Revision: 1.88 $
+# @version $Revision: 1.89 $
 # @author  Claudio Lanconelli
 # @note This script was tested on Kubuntu 64bit 12.04 (gcc 4.6.3)
 #
@@ -41,22 +41,22 @@ echo "gcc utilizzato: $CC"
 
 DOWNLOAD_DIR=${CORTEX_TOPDIR}/downloads
 
-BINUTILS_VER=2.31.1
-GDB_VER=8.2
-GCC_VER=8.2.0
+BINUTILS_VER=2.32
+GDB_VER=8.2.1
+GCC_VER=8.3.0
 GMP_VER=6.1.2
-MPFR_VER=4.0.1
+MPFR_VER=4.0.2
 MPC_VER=1.1.0
 #PPL_VER=1.0
-ISL_VER=0.19
+ISL_VER=0.20
 #CLOOG_VER=0.18.1
-NEWLIB_VER=3.0.0.20180831
+NEWLIB_VER=3.1.0
 LIBELF_VER=0.8.13
-EXPAT_VER=2.2.5
+EXPAT_VER=2.2.6
 #ZLIB_VER=1.2.11
 
-ENABLE_WCMB=no
-#ENABLE_WCMB=yes
+#ENABLE_WCMB=no
+ENABLE_WCMB=yes
 
 AUTOCONF_VERMIN=2.69
 AUTOCONF_VERSION=`autoconf --version | head -n 1 | cut -d' ' -f4`
@@ -152,7 +152,8 @@ else
 	ISL_PATH=http://isl.gforge.inria.fr
 	CLOOG_PATH=ftp://gcc.gnu.org/pub/gcc/infrastructure
 	LIBELF_PATH=http://www.mr511.de/software
-	EXPAT_PATH=http://sourceforge.net/projects/expat/files/expat/${EXPAT_VER}/expat-${EXPAT_VER}.tar.bz2
+	#EXPAT_PATH=http://sourceforge.net/projects/expat/files/expat/${EXPAT_VER}/expat-${EXPAT_VER}.tar.bz2
+	EXPAT_PATH=https://github.com/libexpat/libexpat/releases/download/R_2_2_6/expat-${EXPAT_VER}.tar.bz2
 	ZLIB_PATH=http://zlib.net
 
 	if [ ! -f ${DOWNLOAD_DIR}/expat-${EXPAT_VER}.tar.bz2 ]; then
