@@ -1,13 +1,13 @@
 #!/bin/bash
 #
-# $Id: build-gcc-arm.sh,v 1.89 2018/09/26 23:40:25 claudio Exp $
+# $Id: build-gcc-arm.sh,v 1.90 2019/03/06 00:00:07 claudio Exp $
 #
 # @brief Build cross compiler for ARM Cortex M0/M3/M4 processor
 # 
 # Builds a bare-metal cross GNU toolchain targetting the ARM Cortex M0/M3/M4
 # microprocessor in EABI mode and using the newlib embedded C library.
 #
-# @version $Revision: 1.89 $
+# @version $Revision: 1.90 $
 # @author  Claudio Lanconelli
 # @note This script was tested on Kubuntu 64bit 12.04 (gcc 4.6.3)
 #
@@ -234,6 +234,7 @@ if [ ! -f .libexpat ]; then
 	mkdir build
 	cd build
 	../configure --prefix=${CORTEX_TOPDIR}/static --disable-shared \
+		--without-docbook \
 		2>&1 | tee configure.log
 	make -j${NUM_JOBS} 2>&1 | tee make.log
 	make install 2>&1 | tee install.log
