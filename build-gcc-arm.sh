@@ -1,13 +1,13 @@
 #!/bin/bash
 #
-# $Id: build-gcc-arm.sh,v 1.90 2019/03/06 00:00:07 claudio Exp $
+# $Id: build-gcc-arm.sh,v 1.91 2019/03/06 15:41:07 claudio Exp $
 #
 # @brief Build cross compiler for ARM Cortex M0/M3/M4 processor
 # 
 # Builds a bare-metal cross GNU toolchain targetting the ARM Cortex M0/M3/M4
 # microprocessor in EABI mode and using the newlib embedded C library.
 #
-# @version $Revision: 1.90 $
+# @version $Revision: 1.91 $
 # @author  Claudio Lanconelli
 # @note This script was tested on Kubuntu 64bit 12.04 (gcc 4.6.3)
 #
@@ -42,8 +42,8 @@ echo "gcc utilizzato: $CC"
 DOWNLOAD_DIR=${CORTEX_TOPDIR}/downloads
 
 BINUTILS_VER=2.32
-GDB_VER=8.2.1
-GCC_VER=8.3.0
+GDB_VER=8.3
+GCC_VER=9.1.0
 GMP_VER=6.1.2
 MPFR_VER=4.0.2
 MPC_VER=1.1.0
@@ -432,27 +432,6 @@ if [ ! -f .binutils ]; then
 	touch .binutils
 fi
 
-AUTOCONF_VERMIN=2.64
-AUTOCONF_VERSION=`autoconf --version | head -n 1 | cut -d' ' -f4`
-
-if [ "${AUTOCONF_VERMIN}" != "${AUTOCONF_VERSION}" ]; then
-	AUTOCONF=autoconf${AUTOCONF_VERMIN}
-	AUTOCONF_VERSION=`${AUTOCONF} --version | head -n 1 | cut -d' ' -f4`
-else
-	AUTOCONF=autoconf
-fi
-
-AUTOCONF_VER_INT=`echo "scale=1; ${AUTOCONF_VERSION}*100.0" | bc | cut -d'.' -f 1`
-AUTOCONF_VERMIN_INT=`echo "scale=1; ${AUTOCONF_VERMIN}*100.0" | bc | cut -d'.' -f 1`
-
-#if [ ${AUTOCONF_VERMIN_INT} -gt ${AUTOCONF_VER_INT} ]; then
-if [ ${AUTOCONF_VERMIN_INT} -ne ${AUTOCONF_VER_INT} ]; then
-	echo "!  Autoconf version = ${AUTOCONF_VERSION} (${AUTOCONF_VER_INT}), Required = ${AUTOCONF_VERMIN} (${AUTOCONF_VERMIN_INT})"
-	exit 1
-else
-	echo "Ok Autoconf version = ${AUTOCONF_VERSION} (${AUTOCONF_VER_INT}), Required = ${AUTOCONF_VERMIN} (${AUTOCONF_VERMIN_INT})"
-fi
-
 #Aggiungiamo il path del nuovo compilatore
 export PATH=${TOOLCHAIN_PATH}/bin:$PATH
 
@@ -535,6 +514,25 @@ if [ ! -f .gcc ]; then
 	cd ${CORTEX_TOPDIR}
 	touch .gcc
 fi
+
+
+AUTOCONF_VERMIN=2.64
+AUTOCONF_VERSION=`autoconf --version | head -n 1 | cut -d' ' -f4`
+if [ "${AUTOCONF_VERMIN}" != "${AUTOCONF_VERSION}" ]; then
+	AUTOCONF=autoconf${AUTOCONF_VERMIN}
+	AUTOCONF_VERSION=`${AUTOCONF} --version | head -n 1 | cut -d' ' -f4`
+else
+	AUTOCONF=autoconf
+fi
+AUTOCONF_VER_INT=`echo "scale=1; ${AUTOCONF_VERSION}*100.0" | bc | cut -d'.' -f 1`
+AUTOCONF_VERMIN_INT=`echo "scale=1; ${AUTOCONF_VERMIN}*100.0" | bc | cut -d'.' -f 1`
+if [ ${AUTOCONF_VERMIN_INT} -ne ${AUTOCONF_VER_INT} ]; then
+	echo "!  Autoconf version = ${AUTOCONF_VERSION} (${AUTOCONF_VER_INT}), Required = ${AUTOCONF_VERMIN} (${AUTOCONF_VERMIN_INT})"
+	exit 1
+else
+	echo "Ok Autoconf version = ${AUTOCONF_VERSION} (${AUTOCONF_VER_INT}), Required = ${AUTOCONF_VERMIN} (${AUTOCONF_VERMIN_INT})"
+fi
+
 
 echo "Build NEWLIB"
 cd ${CORTEX_TOPDIR}
