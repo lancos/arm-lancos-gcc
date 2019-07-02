@@ -1,13 +1,13 @@
 #!/bin/bash
 #
-# $Id: build-gcc-arm.sh,v 1.92 2019/06/06 22:42:53 claudio Exp $
+# $Id: build-gcc-arm.sh,v 1.93 2019/06/12 08:45:59 claudio Exp $
 #
 # @brief Build cross compiler for ARM Cortex M0/M3/M4 processor
 # 
 # Builds a bare-metal cross GNU toolchain targetting the ARM Cortex M0/M3/M4
 # microprocessor in EABI mode and using the newlib embedded C library.
 #
-# @version $Revision: 1.92 $
+# @version $Revision: 1.93 $
 # @author  Claudio Lanconelli
 # @note This script was tested on Kubuntu 64bit 12.04 (gcc 4.6.3)
 #
@@ -441,7 +441,6 @@ if [ ! -f .gcc ]; then
 	rm -rf gcc-${GCC_VER}
 	tar xfJ ${DOWNLOAD_DIR}/gcc-${GCC_VER}.tar.xz
 #	patch -p0 <gcc_libgcc_divide_exceptions.patch
-#	cp t-arm-elf.txt gcc-${GCC_VER}/gcc/config/arm/t-arm-elf
 	cd gcc-${GCC_VER}
 	patch -p0 < ../gcc_multilib.patch
 
