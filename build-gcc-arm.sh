@@ -1,13 +1,13 @@
 #!/bin/bash
 #
-# $Id: build-gcc-arm.sh,v 1.83 2018/02/12 23:23:12 claudio Exp $
+# $Id: build-gcc-arm.sh,v 1.84 2018/03/30 14:53:06 claudio Exp $
 #
 # @brief Build cross compiler for ARM Cortex M0/M3/M4 processor
 # 
 # Builds a bare-metal cross GNU toolchain targetting the ARM Cortex M0/M3/M4
 # microprocessor in EABI mode and using the newlib embedded C library.
 #
-# @version $Revision: 1.83 $
+# @version $Revision: 1.84 $
 # @author  Claudio Lanconelli
 # @note This script was tested on Kubuntu 64bit 12.04 (gcc 4.6.3)
 #
@@ -41,24 +41,24 @@ echo "gcc utilizzato: $CC"
 
 DOWNLOAD_DIR=${CORTEX_TOPDIR}/downloads
 
-BINUTILS_VER=2.30
-GDB_VER=8.1
-GCC_VER=7.3.0
+BINUTILS_VER=2.32
+GDB_VER=8.3
+GCC_VER=7.4.0
 GMP_VER=6.1.2
-MPFR_VER=4.0.1
+MPFR_VER=4.0.2
 MPC_VER=1.1.0
 #PPL_VER=1.0
-ISL_VER=0.19
+ISL_VER=0.20
 #CLOOG_VER=0.18.1
-NEWLIB_VER=3.0.0.20180226
+NEWLIB_VER=3.1.0
 LIBELF_VER=0.8.13
-EXPAT_VER=2.2.3
+EXPAT_VER=2.2.6
 #ZLIB_VER=1.2.8
 
-ENABLE_WCMB=no
-#ENABLE_WCMB=yes
+#ENABLE_WCMB=no
+ENABLE_WCMB=yes
 
-AUTOCONF_VERMIN=2.64
+AUTOCONF_VERMIN=2.69
 AUTOCONF_VERSION=`autoconf --version | head -n 1 | cut -d' ' -f4`
 
 if [ "${AUTOCONF_VERMIN}" != "${AUTOCONF_VERSION}" ]; then
@@ -84,7 +84,7 @@ if [ "${ENABLE_WCMB}" == "yes" ]; then
 	TOOLCHAIN_NAME="${TOOLCHAIN_NAME}-wcmb"
 fi
 
-TOOLCHAINLIB_NAME="gmp${GMP_VER}-mpfr${MPFR_VER}-mpc${MPC_VER}-cloog${CLOOG_VER}-libelf${LIBELF_VER}-expat${EXPAT_VER}"
+TOOLCHAINLIB_NAME="gmp${GMP_VER}-mpfr${MPFR_VER}-mpc${MPC_VER}-isl${ISL_VER}-libelf${LIBELF_VER}-expat${EXPAT_VER}"
 echo "Build toolchain ${TOOLCHAIN_NAME}"
 echo "toolchain libs ${TOOLCHAINLIB_NAME}"
 
@@ -152,7 +152,8 @@ else
 	ISL_PATH=http://isl.gforge.inria.fr
 	CLOOG_PATH=ftp://gcc.gnu.org/pub/gcc/infrastructure
 	LIBELF_PATH=http://www.mr511.de/software
-	EXPAT_PATH=http://sourceforge.net/projects/expat/files/expat/${EXPAT_VER}/expat-${EXPAT_VER}.tar.bz2
+	#EXPAT_PATH=http://sourceforge.net/projects/expat/files/expat/${EXPAT_VER}/expat-${EXPAT_VER}.tar.bz2
+	EXPAT_PATH=https://github.com/libexpat/libexpat/releases/download/R_2_2_6/expat-${EXPAT_VER}.tar.bz2
 	ZLIB_PATH=http://zlib.net
 
 	if [ ! -f ${DOWNLOAD_DIR}/expat-${EXPAT_VER}.tar.bz2 ]; then
@@ -271,7 +272,7 @@ if [ ! -f .libgmp ]; then
 		GMPABI=
 	fi
 	echo "Build GMP with ${GMPABI}"
-	../configure ${GMPABI} --prefix=${CORTEX_TOPDIR}/static --enable-cxx --enable-fft --enable-mpbsd \
+	../configure ${GMPABI} --prefix=${CORTEX_TOPDIR}/static --enable-cxx --enable-fft \
 		--disable-shared --enable-static 2>&1 | tee configure.log
 	make -j${NUM_JOBS} 2>&1 | tee make.log
 	make check 2>&1 | tee makecheck.log
@@ -415,10 +416,11 @@ if [ ! -f .binutils ]; then
 		--with-gnu-as \
 		--with-gnu-ld \
 		--disable-nls \
-		--with-float=soft \
+		--with-system-zlib \
 		--with-gmp=${CORTEX_TOPDIR}/static \
 		--with-mpfr=${CORTEX_TOPDIR}/static \
 		--with-mpc=${CORTEX_TOPDIR}/static \
+		--with-isl=${CORTEX_TOPDIR}/static \
 		2>&1 | tee configure.log
 
 #	--with-sysroot=
@@ -429,6 +431,24 @@ if [ ! -f .binutils ]; then
 	touch .binutils
 fi
 
+AUTOCONF_VERMIN=2.64
+AUTOCONF_VERSION=`autoconf --version | head -n 1 | cut -d' ' -f4`
+if [ "${AUTOCONF_VERMIN}" != "${AUTOCONF_VERSION}" ]; then
+	AUTOCONF=autoconf${AUTOCONF_VERMIN}
+	AUTOCONF_VERSION=`${AUTOCONF} --version | head -n 1 | cut -d' ' -f4`
+else
+	AUTOCONF=autoconf
+fi
+AUTOCONF_VER_INT=`echo "scale=1; ${AUTOCONF_VERSION}*100.0" | bc | cut -d'.' -f 1`
+AUTOCONF_VERMIN_INT=`echo "scale=1; ${AUTOCONF_VERMIN}*100.0" | bc | cut -d'.' -f 1`
+if [ ${AUTOCONF_VERMIN_INT} -ne ${AUTOCONF_VER_INT} ]; then
+	echo "!  Autoconf version = ${AUTOCONF_VERSION} (${AUTOCONF_VER_INT}), Required = ${AUTOCONF_VERMIN} (${AUTOCONF_VERMIN_INT})"
+	exit 1
+else
+	echo "Ok Autoconf version = ${AUTOCONF_VERSION} (${AUTOCONF_VER_INT}), Required = ${AUTOCONF_VERMIN} (${AUTOCONF_VERMIN_INT})"
+fi
+
+
 #Aggiungiamo il path del nuovo compilatore
 export PATH=${TOOLCHAIN_PATH}/bin:$PATH
 
@@ -438,7 +458,6 @@ if [ ! -f .gcc ]; then
 	rm -rf gcc-${GCC_VER}
 	tar xfJ ${DOWNLOAD_DIR}/gcc-${GCC_VER}.tar.xz
 #	patch -p0 <gcc_libgcc_divide_exceptions.patch
-	cp t-arm-elf.txt gcc-${GCC_VER}/gcc/config/arm/t-arm-elf
 	cd gcc-${GCC_VER}
 #	patch -p0 < ../gcc_multilib.patch
 
@@ -457,9 +476,7 @@ if [ ! -f .gcc ]; then
 		GCC_CONF_OPTS="--with-system-zlib"
 	fi
 	../configure --target=${TOOLCHAIN_TARGET} --prefix=${TOOLCHAIN_PATH} \
-		--with-mode=thumb \
 		--enable-interwork \
-		--with-float=soft \
 		--enable-multilib \
 		--enable-languages="c,c++" \
 		--with-newlib \
@@ -476,10 +493,13 @@ if [ ! -f .gcc ]; then
 		--disable-libquadmath \
 		--disable-libssp \
 		--disable-libstdcxx-pch \
+		--disable-libada \
+		--disable-libvtv \
 		--disable-nls \
 		--disable-shared \
 		--disable-threads \
 		--disable-tls \
+		--disable-decimal-float \
 		--with-host-libstdcxx='-lstdc++' ${GCC_CONF_OPTS} \
 		--disable-__cxa_atexit \
 		--with-gmp=${CORTEX_TOPDIR}/static \
@@ -487,6 +507,8 @@ if [ ! -f .gcc ]; then
 		--with-mpc=${CORTEX_TOPDIR}/static \
 		--with-libelf=${CORTEX_TOPDIR}/static \
 		--with-isl=${CORTEX_TOPDIR}/static \
+		--with-multilib-list=rmprofile \
+		--with-pkgversion=lancos201907 \
 		2>&1 | tee configure.log
 
 #	--enable-target-optspace
@@ -565,6 +587,7 @@ if [ ! -f .newlib ]; then
 		--disable-newlib-fvwrite-in-streamio \
 		--disable-newlib-fseek-optimization \
 		--disable-newlib-unbuf-stream-opt \
+		--enable-newlib-retargetable-locking \
 		--disable-shared \
 		--disable-nls \
 		--with-gnu-as \
