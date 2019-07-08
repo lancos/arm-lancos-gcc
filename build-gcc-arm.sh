@@ -1,13 +1,13 @@
 #!/bin/bash
 #
-# $Id: build-gcc-arm.sh,v 1.84 2018/03/30 14:53:06 claudio Exp $
+# $Id: build-gcc-arm.sh,v 1.84.2.1 2019/07/02 16:56:59 claudio Exp $
 #
 # @brief Build cross compiler for ARM Cortex M0/M3/M4 processor
 # 
 # Builds a bare-metal cross GNU toolchain targetting the ARM Cortex M0/M3/M4
 # microprocessor in EABI mode and using the newlib embedded C library.
 #
-# @version $Revision: 1.84 $
+# @version $Revision: 1.84.2.1 $
 # @author  Claudio Lanconelli
 # @note This script was tested on Kubuntu 64bit 12.04 (gcc 4.6.3)
 #
@@ -460,6 +460,7 @@ if [ ! -f .gcc ]; then
 #	patch -p0 <gcc_libgcc_divide_exceptions.patch
 	cd gcc-${GCC_VER}
 #	patch -p0 < ../gcc_multilib.patch
+#	cp ../t-rmprofile gcc/config/arm
 
 #	if [ ${AUTOCONF_VERMIN} != ${AUTOCONF_VERSION} ]; then
 #		# hack: allow autoconf version 2.6x instead of 2.64
@@ -573,6 +574,7 @@ if [ ! -f .newlib ]; then
 		NEWLIB_CONF_PARAM="--enable-newlib-elix-level=2 --disable-newlib-wide-orient "
 	fi
 	#note: this needs arm-*-{eabi|elf}-cc to exist or link to arm-*-{eabi|elf}-gcc
+	CFLAGS_FOR_TARGET="-DREENTRANT_SYSCALLS_PROVIDED -DSMALL_MEMORY -DHAVE_ASSERT_FUNC -D__BUFSIZ__=256 -D_MB_EXTENDED_CHARSETS_ALL -ffunction-sections -O3" \
 	../configure --target=${TOOLCHAIN_TARGET} --prefix=${TOOLCHAIN_PATH} \
 		--enable-interwork \
 		--enable-multilib \
@@ -607,7 +609,7 @@ if [ ! -f .newlib ]; then
 #- newlib with different configure options (--enable-newlib-register-fini removed, --enable-newlib-io-c99-formats, --disable-newlib-atexit-dynamic-alloc, --enable-newlib-reent-small, --disable-newlib-fvwrite-in-streamio, --disable-newlib-fseek-optimization, --disable-newlib-wide-orient, --disable-newlib-unbuf-stream-opt) 
 #	--enable-lite-exit --disable-newlib-atexit-dynamic-alloc 
 #-D__HAVE_LOCALE_INFO__ -D__HAVE_LOCALE_INFO_EXTENDED__
-	make -j${NUM_JOBS} CFLAGS_FOR_TARGET="-DREENTRANT_SYSCALLS_PROVIDED -DSMALL_MEMORY -DHAVE_ASSERT_FUNC -D__BUFSIZ__=256 -D_MB_EXTENDED_CHARSETS_ALL -ffunction-sections -fdata-sections" 2>&1 | tee make.log
+	make -j${NUM_JOBS} 2>&1 | tee make.log
 	make install 2>&1 | tee install.log
 	cd ${CORTEX_TOPDIR}
 	touch .newlib
