@@ -1,13 +1,13 @@
 #!/bin/bash
 #
-# $Id: build-gcc-arm.sh,v 1.94 2019/07/02 14:14:00 claudio Exp $
+# $Id: build-gcc-arm.sh,v 1.95 2019/09/06 12:33:01 claudio Exp $
 #
 # @brief Build cross compiler for ARM Cortex M0/M3/M4 processor
 # 
 # Builds a bare-metal cross GNU toolchain targetting the ARM Cortex M0/M3/M4
 # microprocessor in EABI mode and using the newlib embedded C library.
 #
-# @version $Revision: 1.94 $
+# @version $Revision: 1.95 $
 # @author  Claudio Lanconelli
 # @note This script was tested on Kubuntu 64bit 12.04 (gcc 4.6.3)
 #
@@ -491,7 +491,7 @@ if [ ! -f .gcc ]; then
 		--with-libelf=${CORTEX_TOPDIR}/static \
 		--with-isl=${CORTEX_TOPDIR}/static \
 		--with-multilib-list=rmprofile \
-		--with-pkgversion=lancos201905
+		--with-pkgversion=lancos201909
 		2>&1 | tee configure.log
 
 #	--enable-target-optspace
