@@ -1,24 +1,21 @@
 #!/bin/bash
 #
-# $Id: build-gcc-arm.sh,v 1.95 2019/09/06 12:33:01 claudio Exp $
+# @brief Build cross compiler for ARM Cortex M0/M3/M4/M7 processors
 #
-# @brief Build cross compiler for ARM Cortex M0/M3/M4 processor
-# 
-# Builds a bare-metal cross GNU toolchain targetting the ARM Cortex M0/M3/M4
+# Builds a bare-metal cross GNU toolchain targetting the ARM CortexM
 # microprocessor in EABI mode and using the newlib embedded C library.
 #
-# @version $Revision: 1.95 $
 # @author  Claudio Lanconelli
-# @note This script was tested on Kubuntu 64bit 12.04 (gcc 4.6.3)
+# @note This script was tested on Kubuntu 64bit 12/14/16/18.04
 #
 # @note Based on Leon Woestenberg <leon@sidebranch.com> http://www.sidebranch.com/
 #
 # @note You need to pre-install some Ubuntu packages on your host:
-# sudo apt-get install build-essential bison autoconf2.64 texinfo zlib1g-dev
+# sudo apt-get install build-essential bison autoconf2.64 autoconf2.69 texinfo zlib1g-dev
 # and for GDB: 
-# sudo apt-get install libncurses5-dev 
+# sudo apt-get install libncurses5-dev
 #
-# @note Richiede autoconf 2.64
+# @note Need autoconf 2.64 + 2.69
 
 #Impostiamo i flag per uscire al primo errore (anche usando il "make | tee")
 set -o errexit
@@ -33,8 +30,7 @@ set -o pipefail
 
 CORTEX_TOPDIR=`pwd`
 
-#Per ubuntu 8.04, 8.10 e 9.04 va bene il gcc-4.2, per altre distro utilizzare il gcc standard
-# Non utilizzare gcc 4.3.2 che da` problemi a compilare GMP per macchine a 64bit (http://gmplib.org/)
+#Di solito e` sufficiente il gcc della propria distribuzione
 export CC=gcc
 #export CC=gcc-4.2
 echo "gcc utilizzato: $CC"
@@ -55,6 +51,7 @@ LIBELF_VER=0.8.13
 EXPAT_VER=2.2.6
 #ZLIB_VER=1.2.11
 
+#Aggiungere o meno le librerie per la gestione widechar/multi-byte char
 #ENABLE_WCMB=no
 ENABLE_WCMB=yes
 
