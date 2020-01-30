@@ -29,6 +29,7 @@ set -o pipefail
 #echo $LD_LIBRARY_PATH
 
 CORTEX_TOPDIR=`pwd`
+BUILD_DATE=`date +%y%m%d`
 
 #Di solito e` sufficiente il gcc della propria distribuzione
 export CC=gcc
@@ -37,8 +38,8 @@ echo "gcc utilizzato: $CC"
 
 DOWNLOAD_DIR=${CORTEX_TOPDIR}/downloads
 
-BINUTILS_VER=2.32
-GDB_VER=8.3
+BINUTILS_VER=2.33.1
+GDB_VER=8.3.1
 GCC_VER=9.2.0
 GMP_VER=6.1.2
 MPFR_VER=4.0.2
@@ -46,7 +47,7 @@ MPC_VER=1.1.0
 #PPL_VER=1.0
 ISL_VER=0.20
 #CLOOG_VER=0.18.1
-NEWLIB_VER=3.1.0
+NEWLIB_VER=3.2.0.20200102
 LIBELF_VER=0.8.13
 EXPAT_VER=2.2.6
 #ZLIB_VER=1.2.11
@@ -488,7 +489,7 @@ if [ ! -f .gcc ]; then
 		--with-libelf=${CORTEX_TOPDIR}/static \
 		--with-isl=${CORTEX_TOPDIR}/static \
 		--with-multilib-list=rmprofile \
-		--with-pkgversion=lancos201909
+		--with-pkgversion=lancos${BUILD_DATE} \
 		2>&1 | tee configure.log
 
 #	--enable-target-optspace
