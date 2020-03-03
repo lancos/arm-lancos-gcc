@@ -53,8 +53,8 @@ EXPAT_VER=2.2.6
 #ZLIB_VER=1.2.11
 
 #Aggiungere o meno le librerie per la gestione widechar/multi-byte char
-#ENABLE_WCMB=no
-ENABLE_WCMB=yes
+ENABLE_WCMB=no
+#ENABLE_WCMB=yes
 
 AUTOCONF_VERMIN=2.69
 AUTOCONF_VERSION=`autoconf --version | head -n 1 | cut -d' ' -f4`
