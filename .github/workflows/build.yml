@@ -24,7 +24,7 @@ jobs:
 
     # Install needed packages
     - name: Install needed packages
-      run: sudo apt-get install build-essential bison autoconf2.64 autoconf texinfo zlib1g-dev libncurses5-dev
+      run: sudo apt-get install build-essential bison autoconf2.64 autoconf texinfo zlib1g-dev libncurses5-dev libelf-dev
 
     # Runs a single command using the runners shell
     - name: Run a one-line script
