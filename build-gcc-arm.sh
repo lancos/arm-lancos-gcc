@@ -49,7 +49,8 @@ ISL_VER=0.20
 #CLOOG_VER=0.18.1
 NEWLIB_VER=3.3.0
 LIBELF_VER=0.8.13
-EXPAT_VER=2.2.6
+EXPAT_VER=2.2.9
+EXPAT_VERDIR=R_2_2_9
 #ZLIB_VER=1.2.11
 
 #Aggiungere o meno le librerie per la gestione widechar/multi-byte char
@@ -123,11 +124,6 @@ if [ "$1" == "local" ]; then
 	NEWLIB_PATH=${LOCAL_PATH}
 	LIBELF_PATH=${LOCAL_PATH}
 	ZLIB_PATH=${LOCAL_PATH}
-
-	if [ ! -f ${DOWNLOAD_DIR}/expat-${EXPAT_VER}.tar.bz2 ]; then
-		cd ${DOWNLOAD_DIR}
-		wget ${LOCAL_PATH}/expat-${EXPAT_VER}.tar.bz2
-	fi
 else
 	#Usa percorsi remoti (tramite wget)
 	BINUTILS_PATH=http://ftp.gnu.org/pub/gnu/binutils
@@ -150,15 +146,10 @@ else
 	ISL_PATH=http://isl.gforge.inria.fr
 	CLOOG_PATH=ftp://gcc.gnu.org/pub/gcc/infrastructure
 	LIBELF_PATH=http://www.mr511.de/software
-	#EXPAT_PATH=http://sourceforge.net/projects/expat/files/expat/${EXPAT_VER}/expat-${EXPAT_VER}.tar.bz2
-	EXPAT_PATH=https://github.com/libexpat/libexpat/releases/download/R_2_2_6/expat-${EXPAT_VER}.tar.bz2
+	#EXPAT_PATH=http://sourceforge.net/projects/expat/files/expat/${EXPAT_VER}
+	EXPAT_PATH=https://github.com/libexpat/libexpat/releases/download/${EXPAT_VERDIR}
 	ZLIB_PATH=http://zlib.net
 
-	if [ ! -f ${DOWNLOAD_DIR}/expat-${EXPAT_VER}.tar.bz2 ]; then
-		cd ${DOWNLOAD_DIR}
-		wget ${EXPAT_PATH}/download
-		mv download expat-${EXPAT_VER}.tar.bz2
-	fi
 
 	#Snapshots path
 	#BINUTILS_PATH=ftp://sourceware.org/pub/binutils/snapshots
@@ -168,42 +159,45 @@ fi
 
 #Inizia download (solo se necessario)
 cd ${DOWNLOAD_DIR}
-if [ ! -f ${DOWNLOAD_DIR}/binutils-${BINUTILS_VER}.tar.xz ]; then
+if [ ! -f binutils-${BINUTILS_VER}.tar.xz ]; then
 	wget ${BINUTILS_PATH}/binutils-${BINUTILS_VER}.tar.xz
 fi
-if [ ! -f ${DOWNLOAD_DIR}/gdb-${GDB_VER}.tar.xz ]; then
+if [ ! -f gdb-${GDB_VER}.tar.xz ]; then
 	wget ${GDB_PATH}/gdb-${GDB_VER}.tar.xz
 fi
-if [ ! -f ${DOWNLOAD_DIR}/gcc-${GCC_VER}.tar.xz ]; then
+if [ ! -f gcc-${GCC_VER}.tar.xz ]; then
 	wget ${GCC_PATH}/gcc-${GCC_VER}.tar.xz
 fi
-if [ ! -f ${DOWNLOAD_DIR}/gmp-${GMP_VER}.tar.xz ]; then
+if [ ! -f gmp-${GMP_VER}.tar.xz ]; then
 	wget ${GMP_PATH}/gmp-${GMP_VER}.tar.xz
 fi
-if [ ! -f ${DOWNLOAD_DIR}/mpfr-${MPFR_VER}.tar.xz ]; then
+if [ ! -f mpfr-${MPFR_VER}.tar.xz ]; then
 	wget ${MPFR_PATH}/mpfr-${MPFR_VER}.tar.xz
 fi
-if [ ! -f ${DOWNLOAD_DIR}/newlib-${NEWLIB_VER}.tar.gz ]; then
+if [ ! -f newlib-${NEWLIB_VER}.tar.gz ]; then
 	wget ${NEWLIB_PATH}/newlib-${NEWLIB_VER}.tar.gz
 fi
-if [ ! -f ${DOWNLOAD_DIR}/mpc-${MPC_VER}.tar.gz ]; then
+if [ ! -f mpc-${MPC_VER}.tar.gz ]; then
 	wget ${MPC_PATH}/mpc-${MPC_VER}.tar.gz
 fi
-#if [ ! -f ${DOWNLOAD_DIR}/ppl-${PPL_VER}.tar.bz2 ]; then
+#if [ ! -f ppl-${PPL_VER}.tar.bz2 ]; then
 #	wget ${PPL_PATH}/ppl-${PPL_VER}.tar.bz2
 #fi
-if [ ! -f ${DOWNLOAD_DIR}/isl-${ISL_VER}.tar.bz2 ]; then
+if [ ! -f isl-${ISL_VER}.tar.bz2 ]; then
 	wget ${ISL_PATH}/isl-${ISL_VER}.tar.bz2
 fi
-#if [ ! -f ${DOWNLOAD_DIR}/cloog-${CLOOG_VER}.tar.gz ]; then
+#if [ ! -f cloog-${CLOOG_VER}.tar.gz ]; then
 #	wget ${CLOOG_PATH}/cloog-${CLOOG_VER}.tar.gz
 #fi
-if [ ! -f ${DOWNLOAD_DIR}/libelf-${LIBELF_VER}.tar.gz ]; then
+if [ ! -f libelf-${LIBELF_VER}.tar.gz ]; then
 	wget ${LIBELF_PATH}/libelf-${LIBELF_VER}.tar.gz
 fi
-#if [ ! -f ${DOWNLOAD_DIR}/zlib-${ZLIB_VER}.tar.gz ]; then
+#if [ ! -f zlib-${ZLIB_VER}.tar.gz ]; then
 #	wget ${ZLIB_PATH}/zlib-${ZLIB_VER}.tar.gz
 #fi
+if [ ! -f expat-${EXPAT_VER}.tar.gz ]; then
+	wget ${EXPAT_PATH}/expat-${EXPAT_VER}.tar.gz
+fi
 
 #Vista MinGW workaround (da Yagarto)
 echo "${OSTYPE}"
@@ -227,7 +221,7 @@ echo "Build EXPAT"
 cd ${CORTEX_TOPDIR}
 if [ ! -f .libexpat ]; then
 	rm -rf expat-${EXPAT_VER}
-	tar xfj ${DOWNLOAD_DIR}/expat-${EXPAT_VER}.tar.bz2
+	tar xfz ${DOWNLOAD_DIR}/expat-${EXPAT_VER}.tar.gz
 	cd expat-${EXPAT_VER}
 	mkdir build
 	cd build
