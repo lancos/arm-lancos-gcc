@@ -667,8 +667,9 @@ if [ ! -f .tarxz ]; then
 	tar cfJ ${TOOLCHAIN_NAME}.tar.xz ${TOOLCHAIN_NAME}
 	echo "TAR XZ Done"
 	cd ${CORTEX_TOPDIR}
-	echo "${TOOLCHAIN_NAME}" > artifact_name
-	echo "${TOOLCHAIN_PATH}/${TOOLCHAIN_NAME}.tar.xz" > artifact_path
 	touch .tarxz
 fi
+echo "${TOOLCHAIN_NAME}" > ${CORTEX_TOPDIR}/artifact_name
+echo "${HOME}/${TOOLCHAIN_NAME}.tar.xz" > ${CORTEX_TOPDIR}/artifact_path
+cat ${CORTEX_TOPDIR}/artifact_path
 echo "Done."
