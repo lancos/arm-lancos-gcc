@@ -11,7 +11,7 @@
 # @note Based on Leon Woestenberg <leon@sidebranch.com> http://www.sidebranch.com/
 #
 # @note You need to pre-install some Ubuntu packages on your host:
-# sudo apt-get install build-essential bison autoconf2.64 autoconf2.69 texinfo zlib1g-dev
+# sudo apt-get install build-essential bison autoconf2.64 autoconf texinfo zlib1g-dev libelf-dev
 # and for GDB: 
 # sudo apt-get install libncurses5-dev
 #
@@ -48,7 +48,7 @@ MPC_VER=1.1.0
 ISL_VER=0.20
 #CLOOG_VER=0.18.1
 NEWLIB_VER=3.3.0
-LIBELF_VER=0.8.13
+#LIBELF_VER=0.8.13
 EXPAT_VER=2.2.9
 EXPAT_VERDIR=R_2_2_9
 #ZLIB_VER=1.2.11
@@ -83,7 +83,7 @@ if [ "${ENABLE_WCMB}" == "yes" ]; then
 	TOOLCHAIN_NAME="${TOOLCHAIN_NAME}-wcmb"
 fi
 
-TOOLCHAINLIB_NAME="gmp${GMP_VER}-mpfr${MPFR_VER}-mpc${MPC_VER}-isl${ISL_VER}-libelf${LIBELF_VER}-expat${EXPAT_VER}"
+TOOLCHAINLIB_NAME="gmp${GMP_VER}-mpfr${MPFR_VER}-mpc${MPC_VER}-isl${ISL_VER}-expat${EXPAT_VER}"
 echo "Build toolchain ${TOOLCHAIN_NAME}"
 echo "toolchain libs ${TOOLCHAINLIB_NAME}"
 
@@ -145,7 +145,7 @@ else
 	PPL_PATH=ftp://ftp.cs.unipr.it/pub/ppl/releases/${PPL_VER}
 	ISL_PATH=http://isl.gforge.inria.fr
 	CLOOG_PATH=ftp://gcc.gnu.org/pub/gcc/infrastructure
-	LIBELF_PATH=http://www.mr511.de/software
+	#LIBELF_PATH=http://www.mr511.de/software
 	#EXPAT_PATH=http://sourceforge.net/projects/expat/files/expat/${EXPAT_VER}
 	EXPAT_PATH=https://github.com/libexpat/libexpat/releases/download/${EXPAT_VERDIR}
 	ZLIB_PATH=http://zlib.net
@@ -189,9 +189,9 @@ fi
 #if [ ! -f cloog-${CLOOG_VER}.tar.gz ]; then
 #	wget ${CLOOG_PATH}/cloog-${CLOOG_VER}.tar.gz
 #fi
-if [ ! -f libelf-${LIBELF_VER}.tar.gz ]; then
-	wget ${LIBELF_PATH}/libelf-${LIBELF_VER}.tar.gz
-fi
+#if [ ! -f libelf-${LIBELF_VER}.tar.gz ]; then
+#	wget ${LIBELF_PATH}/libelf-${LIBELF_VER}.tar.gz
+#fi
 #if [ ! -f zlib-${ZLIB_VER}.tar.gz ]; then
 #	wget ${ZLIB_PATH}/zlib-${ZLIB_VER}.tar.gz
 #fi
@@ -234,21 +234,21 @@ if [ ! -f .libexpat ]; then
 	touch .libexpat
 fi
 
-echo "Build LIBELF"
-cd ${CORTEX_TOPDIR}
-if [ ! -f .libelf ]; then
-	rm -rf libelf-${LIBELF_VER}
-	tar xfz ${DOWNLOAD_DIR}/libelf-${LIBELF_VER}.tar.gz
-	cd libelf-${LIBELF_VER}
-	mkdir build
-	cd build
-	../configure --prefix=${CORTEX_TOPDIR}/static --disable-shared --enable-extended-format \
-		2>&1 | tee configure.log
-	make -j${NUM_JOBS} 2>&1 | tee make.log
-	make install 2>&1 | tee makeinstall.log
-	cd ${CORTEX_TOPDIR}
-	touch .libelf
-fi
+#echo "Build LIBELF"
+#cd ${CORTEX_TOPDIR}
+#if [ ! -f .libelf ]; then
+#	rm -rf libelf-${LIBELF_VER}
+#	tar xfz ${DOWNLOAD_DIR}/libelf-${LIBELF_VER}.tar.gz
+#	cd libelf-${LIBELF_VER}
+#	mkdir build
+#	cd build
+#	../configure --prefix=${CORTEX_TOPDIR}/static --disable-shared --enable-extended-format \
+#		2>&1 | tee configure.log
+#	make -j${NUM_JOBS} 2>&1 | tee make.log
+#	make install 2>&1 | tee makeinstall.log
+#	cd ${CORTEX_TOPDIR}
+#	touch .libelf
+#fi
 
 echo "Build GMP"
 cd ${CORTEX_TOPDIR}
@@ -480,7 +480,6 @@ if [ ! -f .gcc ]; then
 		--with-gmp=${CORTEX_TOPDIR}/static \
 		--with-mpfr=${CORTEX_TOPDIR}/static \
 		--with-mpc=${CORTEX_TOPDIR}/static \
-		--with-libelf=${CORTEX_TOPDIR}/static \
 		--with-isl=${CORTEX_TOPDIR}/static \
 		--with-multilib-list=rmprofile \
 		--with-pkgversion=lancos${BUILD_DATE} \
@@ -491,6 +490,7 @@ if [ ! -f .gcc ]; then
 #	--without-included-gettext ??
 #	--enable-stage1-checking=all
 #	--enable-version-specific-runtime-libs
+#	--with-libelf=${CORTEX_TOPDIR}/static
 
 #Yagarto gcc configure
 # --disable-threads --with-gcc \
@@ -591,10 +591,10 @@ if [ ! -f .newlib ]; then
 		--with-gmp=${CORTEX_TOPDIR}/static \
 		--with-mpfr=${CORTEX_TOPDIR}/static \
 		--with-mpc=${CORTEX_TOPDIR}/static \
-		--with-libelf=${CORTEX_TOPDIR}/static \
 		2>&1 | tee configure.log
 
-# --enable-target-optspace
+#	--enable-target-optspace
+#	--with-libelf=${CORTEX_TOPDIR}/static
 #Linaro:
 #    --enable-newlib-io-long-long --enable-newlib-register-fini
 #Freddie Chopin:
@@ -636,9 +636,11 @@ if [ ! -f .gdb ]; then
 		--with-gmp=${CORTEX_TOPDIR}/static \
 		--with-mpfr=${CORTEX_TOPDIR}/static \
 		--with-mpc=${CORTEX_TOPDIR}/static \
-		--with-libelf=${CORTEX_TOPDIR}/static \
 		--with-libexpat-prefix=${CORTEX_TOPDIR}/static \
 		2>&1 | tee configure.log
+
+#	--with-libelf=${CORTEX_TOPDIR}/static
+
 	make -j${NUM_JOBS} 2>&1 | tee make.log
 	make install 2>&1 | tee install.log
 	cd ${CORTEX_TOPDIR}
