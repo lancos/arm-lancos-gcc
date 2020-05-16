@@ -2,6 +2,9 @@
 downloads
 static
 
+artifact_name
+artifact_path
+
 #libs
 mpfr-*
 libelf-*
