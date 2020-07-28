@@ -139,7 +139,8 @@ else
 	NEWLIB_PATH=ftp://sourceware.org/pub/newlib
 
 	GMP_PATH=http://ftp.gnu.org/pub/gnu/gmp
-	MPFR_PATH=http://www.mpfr.org/mpfr-current
+	#MPFR_PATH=http://www.mpfr.org/mpfr-current
+	MPFR_PATH=https://www.mpfr.org/mpfr-${MPFR_VER}
 	#MPC_PATH=http://www.multiprecision.org/mpc/download
 	MPC_PATH=ftp://ftp.gnu.org/gnu/mpc
 	PPL_PATH=ftp://ftp.cs.unipr.it/pub/ppl/releases/${PPL_VER}
