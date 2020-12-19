@@ -32,8 +32,8 @@ jobs:
         ./build-gcc-arm.sh
         ARTIFACT=$(cat artifact_name)
         ARTIFACTPATH=$(cat artifact_path)
-        echo "::set-env name=ARTIFACT_NAME::$ARTIFACT"
-        echo "::set-env name=ARTIFACT_PATH::$ARTIFACTPATH"
+        echo "ARTIFACT_NAME=$ARTIFACT" >> $GITHUB_ENV
+        echo "ARTIFACT_PATH=$ARTIFACTPATH" >> $GITHUB_ENV
 
     - name: Upload a Build Artifact
       uses: actions/upload-artifact@v2
