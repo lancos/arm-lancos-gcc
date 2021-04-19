@@ -38,9 +38,9 @@ echo "gcc utilizzato: $CC"
 
 DOWNLOAD_DIR=${CORTEX_TOPDIR}/downloads
 
-BINUTILS_VER=2.35.1
+BINUTILS_VER=2.36.1
 GDB_VER=10.1
-GCC_VER=10.2.0
+GCC_VER=10.3.0
 GMP_VER=6.1.2
 MPFR_VER=4.0.2
 MPC_VER=1.1.0
@@ -49,8 +49,8 @@ ISL_VER=0.20
 #CLOOG_VER=0.18.1
 NEWLIB_VER=4.1.0
 #LIBELF_VER=0.8.13
-EXPAT_VER=2.2.9
-EXPAT_VERDIR=R_2_2_9
+EXPAT_VER=2.3.0
+EXPAT_VERDIR=R_2_3_0
 #ZLIB_VER=1.2.11
 
 #Aggiungere o meno le librerie per la gestione widechar/multi-byte char
@@ -122,7 +122,8 @@ if [ "$1" == "local" ]; then
 	PPL_PATH=${LOCAL_PATH}
 	CLOOG_PATH=${LOCAL_PATH}
 	NEWLIB_PATH=${LOCAL_PATH}
-	LIBELF_PATH=${LOCAL_PATH}
+	#LIBELF_PATH=${LOCAL_PATH}
+	EXPAT_PATH=${LOCAL_PATH}
 	ZLIB_PATH=${LOCAL_PATH}
 else
 	#Usa percorsi remoti (tramite wget)
