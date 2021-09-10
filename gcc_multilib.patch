@@ -1,5 +1,5 @@
---- gcc/config/arm/t-rmprofile.orig	2020-05-16 23:46:28.707738527 +0200
-+++ gcc/config/arm/t-rmprofile	2020-05-16 23:56:38.297340867 +0200
+--- gcc/config/arm/t-rmprofile.orig	2021-07-28 08:55:07.036283841 +0200
++++ gcc/config/arm/t-rmprofile	2021-09-10 12:04:46.229968125 +0200
 @@ -27,15 +27,13 @@
  
  # Arch and FPU variants to build libraries with
@@ -18,7 +18,7 @@
  
  # ARMv7e-M with FP (single and double precision variants)
  MULTILIB_REQUIRED	+= mthumb/march=armv7e-m+fp/mfloat-abi=hard
-@@ -43,42 +41,14 @@
+@@ -43,13 +41,6 @@
  MULTILIB_REQUIRED	+= mthumb/march=armv7e-m+fp.dp/mfloat-abi=hard
  MULTILIB_REQUIRED	+= mthumb/march=armv7e-m+fp.dp/mfloat-abi=softfp
  
@@ -32,10 +32,14 @@
  # Arch Matches
  MULTILIB_MATCHES	+= march?armv6s-m=march?armv6-m
  
+@@ -58,38 +49,9 @@
+ # MULITIB_MATCHES variant strings are compared with mlibarch option for multilib
+ # linking.
+ 
 -# Map all v8-m.main+dsp FP variants down to the variant without DSP.
--MULTILIB_MATCHES	+= march?armv8-m.main=march?armv8-m.main+dsp \
+-MULTILIB_MATCHES	+= march?armv8-m.main=mlibarch?armv8-m.main+dsp \
 -			   $(foreach FP, +fp +fp.dp, \
--			     march?armv8-m.main$(FP)=march?armv8-m.main+dsp$(FP))
+-			     march?armv8-m.main$(FP)=mlibarch?armv8-m.main+dsp$(FP))
 -
  # For single-precision only fpv5, use the base fp libraries
  MULTILIB_MATCHES	+= march?armv7e-m+fp=march?armv7e-m+fpv5
@@ -44,11 +48,10 @@
 -MULTILIB_REUSE		+= $(foreach ARCH, armv6s-m armv7-m armv7e-m armv8-m\.base armv8-m\.main, \
 +MULTILIB_REUSE		+= $(foreach ARCH, armv6s-m armv7-m armv7e-m, \
  			     mthumb/march.$(ARCH)/mfloat-abi.soft=mthumb/march.$(ARCH)/mfloat-abi.softfp)
- 
- 
+-
 -# Map v8.1-M to v8-M.
--MULTILIB_MATCHES	+= march?armv8-m.main=march?armv8.1-m.main
--MULTILIB_MATCHES	+= march?armv8-m.main=march?armv8.1-m.main+dsp
+-MULTILIB_MATCHES	+= march?armv8-m.main=mlibarch?armv8.1-m.main
+-MULTILIB_MATCHES	+= march?armv8-m.main=mlibarch?armv8.1-m.main+dsp
 -MULTILIB_REUSE		+= mthumb/march.armv8-m\.main/mfloat-abi.soft=mthumb/march.armv8\.1-m\.main+mve/mfloat-abi.soft
 -MULTILIB_REUSE		+= mthumb/march.armv8-m\.main/mfloat-abi.soft=mthumb/march.armv8\.1-m\.main+mve/mfloat-abi.softfp
 -
@@ -57,8 +60,15 @@
 -
 -# Map all v8.1-m.main FP sp variants down to v8-m.
 -MULTILIB_MATCHES += $(foreach FP, $(v8_1m_sp_variants), \
--			     march?armv8-m.main+fp=march?armv8.1-m.main$(FP))
+-			     march?armv8-m.main+fp=mlibarch?armv8.1-m.main$(FP))
 -
 -# Map all v8.1-m.main FP dp variants down to v8-m.
 -MULTILIB_MATCHES += $(foreach FP, $(v8_1m_dp_variants), \
--			     march?armv8-m.main+fp.dp=march?armv8.1-m.main$(FP))
+-			     march?armv8-m.main+fp.dp=mlibarch?armv8.1-m.main$(FP))
+-
+-# For all the MULTILIB_REQUIRED for v8-m and above, add MULTILIB_MATCHES which
+-# maps mlibarch with march for multilib linking.
+-MULTILIB_MATCHES	+= march?armv8-m.main=mlibarch?armv8-m.main
+-MULTILIB_MATCHES	+= march?armv8-m.main+fp=mlibarch?armv8-m.main+fp
+-MULTILIB_MATCHES	+= march?armv8-m.main+fp.dp=mlibarch?armv8-m.main+fp.dp
+-MULTILIB_MATCHES	+= march?armv8.1-m.main+mve=mlibarch?armv8.1-m.main+mve
