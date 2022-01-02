@@ -1,9 +1,9 @@
---- newlib/libc/include/sys/time.h	2018-02-26 20:39:48.000000000 +0100
-+++ newlib/libc/include/sys/new_time.h	2018-03-30 14:48:34.967448212 +0200
-@@ -274,8 +274,8 @@
+--- newlib/libc/include/sys/time.h	2021-12-31 18:46:13.000000000 +0100
++++ newlib/libc/include/sys/new_time.h	2022-01-02 17:47:27.743218063 +0100
+@@ -420,8 +420,8 @@
  int adjtime (const struct timeval *, struct timeval *);
- int futimes (int, const struct timeval *);
- int lutimes (const char *, const struct timeval *);
+ int futimes (int, const struct timeval [2]);
+ int lutimes (const char *, const struct timeval [2]);
 -int settimeofday (const struct timeval *, const struct timezone *);
  #endif
 +int settimeofday (const struct timeval *, const struct timezone *);
