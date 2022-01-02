@@ -45,7 +45,7 @@ GMP_VER=6.2.1
 MPFR_VER=4.1.0
 MPC_VER=1.2.1
 #PPL_VER=1.0
-ISL_VER=0.20
+ISL_VER=0.24
 #CLOOG_VER=0.18.1
 NEWLIB_VER=4.2.0.20211231
 #LIBELF_VER=0.8.13
@@ -145,7 +145,7 @@ else
 	#MPC_PATH=http://www.multiprecision.org/mpc/download
 	MPC_PATH=ftp://ftp.gnu.org/gnu/mpc
 	PPL_PATH=ftp://ftp.cs.unipr.it/pub/ppl/releases/${PPL_VER}
-	ISL_PATH=http://isl.gforge.inria.fr
+	ISL_PATH=https://sourceforge.net/projects/libisl/files/isl-${ISL_VER}.tar.xz/download
 	CLOOG_PATH=ftp://gcc.gnu.org/pub/gcc/infrastructure
 	#LIBELF_PATH=http://www.mr511.de/software
 	#EXPAT_PATH=http://sourceforge.net/projects/expat/files/expat/${EXPAT_VER}
@@ -185,8 +185,8 @@ fi
 #if [ ! -f ppl-${PPL_VER}.tar.bz2 ]; then
 #	wget ${PPL_PATH}/ppl-${PPL_VER}.tar.bz2
 #fi
-if [ ! -f isl-${ISL_VER}.tar.bz2 ]; then
-	wget ${ISL_PATH}/isl-${ISL_VER}.tar.bz2
+if [ ! -f isl-${ISL_VER}.tar.xz ]; then
+	wget -O isl-${ISL_VER}.tar.xz ${ISL_PATH}
 fi
 #if [ ! -f cloog-${CLOOG_VER}.tar.gz ]; then
 #	wget ${CLOOG_PATH}/cloog-${CLOOG_VER}.tar.gz
@@ -336,7 +336,7 @@ echo "Build ISL"
 cd ${CORTEX_TOPDIR}
 if [ ! -f .libisl ]; then
 	rm -rf isl-${ISL_VER}
-	tar xfj ${DOWNLOAD_DIR}/isl-${ISL_VER}.tar.bz2
+	tar xfJ ${DOWNLOAD_DIR}/isl-${ISL_VER}.tar.xz
 	cd isl-${ISL_VER}
 	mkdir build
 	cd build
