@@ -6,7 +6,7 @@
 # microprocessor in EABI mode and using the newlib embedded C library.
 #
 # @author  Claudio Lanconelli
-# @note This script was tested on Kubuntu 64bit 12/14/16/18.04
+# @note This script was tested on Kubuntu 64bit 18/20.04
 #
 # @note Based on Leon Woestenberg <leon@sidebranch.com> http://www.sidebranch.com/
 #
@@ -39,7 +39,7 @@ echo "gcc utilizzato: $CC"
 DOWNLOAD_DIR=${CORTEX_TOPDIR}/downloads
 
 BINUTILS_VER=2.37
-GDB_VER=11.1
+GDB_VER=11.2
 GCC_VER=11.2.0
 GMP_VER=6.2.1
 MPFR_VER=4.1.0
@@ -143,7 +143,7 @@ else
 	#MPFR_PATH=http://www.mpfr.org/mpfr-current
 	MPFR_PATH=https://www.mpfr.org/mpfr-${MPFR_VER}
 	#MPC_PATH=http://www.multiprecision.org/mpc/download
-	MPC_PATH=ftp://ftp.gnu.org/gnu/mpc
+	MPC_PATH=http://ftp.gnu.org/gnu/mpc
 	PPL_PATH=ftp://ftp.cs.unipr.it/pub/ppl/releases/${PPL_VER}
 	ISL_PATH=https://sourceforge.net/projects/libisl/files/isl-${ISL_VER}.tar.xz/download
 	CLOOG_PATH=ftp://gcc.gnu.org/pub/gcc/infrastructure
