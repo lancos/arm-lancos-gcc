@@ -174,7 +174,7 @@ if [ ! -f gmp-${GMP_VER}.tar.xz ]; then
 	wget ${GMP_PATH}/gmp-${GMP_VER}.tar.xz
 fi
 if [ ! -f mpfr-${MPFR_VER}.tar.xz ]; then
-	wget ${MPFR_PATH}/mpfr-${MPFR_VER}.tar.xz
+	wget --no-check-certificate ${MPFR_PATH}/mpfr-${MPFR_VER}.tar.xz
 fi
 if [ ! -f newlib-${NEWLIB_VER}.tar.gz ]; then
 	wget ${NEWLIB_PATH}/newlib-${NEWLIB_VER}.tar.gz
