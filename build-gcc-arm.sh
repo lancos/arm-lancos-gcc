@@ -39,7 +39,7 @@ echo "gcc utilizzato: $CC"
 DOWNLOAD_DIR=${CORTEX_TOPDIR}/downloads
 
 BINUTILS_VER=2.38
-GDB_VER=11.2
+GDB_VER=12.1
 GCC_VER=12.1.0
 GMP_VER=6.2.1
 MPFR_VER=4.1.0
@@ -49,8 +49,8 @@ ISL_VER=0.24
 #CLOOG_VER=0.18.1
 NEWLIB_VER=4.2.0.20211231
 #LIBELF_VER=0.8.13
-EXPAT_VER=2.3.0
-EXPAT_VERDIR=R_2_3_0
+EXPAT_VER=2.4.8
+EXPAT_VERDIR=R_2_4_8
 #ZLIB_VER=1.2.11
 
 #Aggiungere o meno le librerie per la gestione widechar/multi-byte char
