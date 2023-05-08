@@ -6,12 +6,12 @@
 # microprocessor in EABI mode and using the newlib embedded C library.
 #
 # @author  Claudio Lanconelli
-# @note This script was tested on Kubuntu 64bit 18/20.04
+# @note This script was tested on Kubuntu 64bit 18/20.04/22.04
 #
 # @note Based on Leon Woestenberg <leon@sidebranch.com> http://www.sidebranch.com/
 #
 # @note You need to pre-install some Ubuntu packages on your host:
-# sudo apt-get install build-essential bison autoconf2.64 autoconf texinfo zlib1g-dev libelf-dev
+# sudo apt-get install build-essential bison autoconf2.64 autoconf2.69 autoconf texinfo zlib1g-dev libelf-dev
 # and for GDB: 
 # sudo apt-get install libncurses5-dev
 #
@@ -40,14 +40,14 @@ DOWNLOAD_DIR=${CORTEX_TOPDIR}/downloads
 
 BINUTILS_VER=2.39
 GDB_VER=12.1
-GCC_VER=12.3.0
+GCC_VER=13.1.0
 GMP_VER=6.2.1
 MPFR_VER=4.1.0
 MPC_VER=1.2.1
 #PPL_VER=1.0
 ISL_VER=0.24
 #CLOOG_VER=0.18.1
-NEWLIB_VER=4.2.0.20211231
+NEWLIB_VER=4.3.0.20230120
 #LIBELF_VER=0.8.13
 EXPAT_VER=2.4.8
 EXPAT_VERDIR=R_2_4_8
