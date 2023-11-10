@@ -38,9 +38,9 @@ echo "gcc utilizzato: $CC"
 
 DOWNLOAD_DIR=${CORTEX_TOPDIR}/downloads
 
-BINUTILS_VER=2.39
-GDB_VER=12.1
-GCC_VER=13.1.0
+BINUTILS_VER=2.41
+GDB_VER=13.2
+GCC_VER=13.2.0
 GMP_VER=6.2.1
 MPFR_VER=4.1.0
 MPC_VER=1.2.1
@@ -49,8 +49,8 @@ ISL_VER=0.24
 #CLOOG_VER=0.18.1
 NEWLIB_VER=4.3.0.20230120
 #LIBELF_VER=0.8.13
-EXPAT_VER=2.4.8
-EXPAT_VERDIR=R_2_4_8
+EXPAT_VER=2.5.0
+EXPAT_VERDIR=R_2_5_0
 #ZLIB_VER=1.2.11
 
 #Aggiungere o meno le librerie per la gestione widechar/multi-byte char
@@ -436,7 +436,7 @@ if [ ! -f .gcc ]; then
 	tar xfJ ${DOWNLOAD_DIR}/gcc-${GCC_VER}.tar.xz
 #	patch -p0 <gcc_libgcc_divide_exceptions.patch
 	cd gcc-${GCC_VER}
-	patch -p0 < ../gcc_multilib.patch
+#	patch -p0 < ../gcc_multilib.patch
 
 #	if [ ${AUTOCONF_VERMIN} != ${AUTOCONF_VERSION} ]; then
 #		# hack: allow autoconf version 2.6x instead of 2.64
@@ -509,7 +509,7 @@ if [ ! -f .gcc ]; then
 fi
 
 
-AUTOCONF_VERMIN=2.64
+AUTOCONF_VERMIN=2.69
 AUTOCONF_VERSION=`autoconf --version | head -n 1 | cut -d' ' -f4`
 if [ "${AUTOCONF_VERMIN}" != "${AUTOCONF_VERSION}" ]; then
 	AUTOCONF=autoconf${AUTOCONF_VERMIN}
