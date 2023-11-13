@@ -11,11 +11,11 @@
 # @note Based on Leon Woestenberg <leon@sidebranch.com> http://www.sidebranch.com/
 #
 # @note You need to pre-install some Ubuntu packages on your host:
-# sudo apt-get install build-essential bison autoconf2.64 autoconf2.69 autoconf texinfo zlib1g-dev libelf-dev
+# sudo apt-get install build-essential bison autoconf2.69 autoconf texinfo zlib1g-dev libelf-dev
 # and for GDB: 
-# sudo apt-get install libncurses5-dev
+# sudo apt-get install libncurses5-dev libgmp-dev (quest'ultimo non dovrebbe servire se GDB implementasse correttamente il configure)
 #
-# @note Need autoconf 2.64 + 2.69
+# @note Need autoconf 2.69
 
 #Impostiamo i flag per uscire al primo errore (anche usando il "make | tee")
 set -o errexit
@@ -70,7 +70,6 @@ fi
 AUTOCONF_VER_INT=`echo "scale=1; ${AUTOCONF_VERSION}*100.0" | bc | cut -d'.' -f 1`
 AUTOCONF_VERMIN_INT=`echo "scale=1; ${AUTOCONF_VERMIN}*100.0" | bc | cut -d'.' -f 1`
 
-#if [ ${AUTOCONF_VERMIN_INT} -gt ${AUTOCONF_VER_INT} ]; then
 if [ ${AUTOCONF_VERMIN_INT} -ne ${AUTOCONF_VER_INT} ]; then
 	echo "!  Autoconf version = ${AUTOCONF_VERSION} (${AUTOCONF_VER_INT}), Required = ${AUTOCONF_VERMIN} (${AUTOCONF_VERMIN_INT})"
 	exit 1
@@ -506,24 +505,6 @@ if [ ! -f .gcc ]; then
 	ln -snf ${TOOLCHAIN_TARGET}-gcc ${TOOLCHAIN_TARGET}-cc
 	cd ${CORTEX_TOPDIR}
 	touch .gcc
-fi
-
-
-AUTOCONF_VERMIN=2.69
-AUTOCONF_VERSION=`autoconf --version | head -n 1 | cut -d' ' -f4`
-if [ "${AUTOCONF_VERMIN}" != "${AUTOCONF_VERSION}" ]; then
-	AUTOCONF=autoconf${AUTOCONF_VERMIN}
-	AUTOCONF_VERSION=`${AUTOCONF} --version | head -n 1 | cut -d' ' -f4`
-else
-	AUTOCONF=autoconf
-fi
-AUTOCONF_VER_INT=`echo "scale=1; ${AUTOCONF_VERSION}*100.0" | bc | cut -d'.' -f 1`
-AUTOCONF_VERMIN_INT=`echo "scale=1; ${AUTOCONF_VERMIN}*100.0" | bc | cut -d'.' -f 1`
-if [ ${AUTOCONF_VERMIN_INT} -ne ${AUTOCONF_VER_INT} ]; then
-	echo "!  Autoconf version = ${AUTOCONF_VERSION} (${AUTOCONF_VER_INT}), Required = ${AUTOCONF_VERMIN} (${AUTOCONF_VERMIN_INT})"
-	exit 1
-else
-	echo "Ok Autoconf version = ${AUTOCONF_VERSION} (${AUTOCONF_VER_INT}), Required = ${AUTOCONF_VERMIN} (${AUTOCONF_VERMIN_INT})"
 fi
 
 
