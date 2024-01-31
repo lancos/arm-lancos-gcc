@@ -15,7 +15,7 @@ jobs:
   # This workflow contains a single job called "build"
   build:
     # The type of runner that the job will run on
-    runs-on: [ubuntu-20.04]
+    runs-on: [ubuntu-22.04]
 
     # Steps represent a sequence of tasks that will be executed as part of the job
     steps:
@@ -24,7 +24,7 @@ jobs:
 
     # Install needed packages
     - name: Install needed packages
-      run: sudo apt-get install build-essential bison autoconf2.64 autoconf texinfo zlib1g-dev libncurses5-dev libelf-dev
+      run: sudo apt-get install build-essential bison autoconf2.69 autoconf texinfo zlib1g-dev libncurses5-dev libelf-dev libgmp-dev
 
     # Runs a set of commands using the runners shell
     - name: Run build
