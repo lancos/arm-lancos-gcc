@@ -23,7 +23,7 @@ jobs:
     # Steps represent a sequence of tasks that will be executed as part of the job
     steps:
     # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
-    - uses: actions/checkout@v4
+    - uses: actions/checkout@v4.2.2
 
     # Install needed packages
     - name: Install needed packages
@@ -39,7 +39,7 @@ jobs:
         echo "ARTIFACT_PATH=$ARTIFACTPATH" >> $GITHUB_ENV
 
     - name: Upload a Build Artifact
-      uses: actions/upload-artifact@v4
+      uses: actions/upload-artifact@v4.6.2
       with:
         name: ${{ env.ARTIFACT_NAME }}
         path: ${{ env.ARTIFACT_PATH }}
@@ -47,7 +47,7 @@ jobs:
 
     - name: Create Release and Upload Asset
       if: startsWith(github.ref, 'refs/tags/v')
-      uses: softprops/action-gh-release@v1
+      uses: softprops/action-gh-release@v2
       with:
         files: ${{ env.ARTIFACT_PATH }}
         draft: true
