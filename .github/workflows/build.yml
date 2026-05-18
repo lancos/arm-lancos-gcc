@@ -7,6 +7,7 @@ name: CIBuild
 on:
   push:
     branches: [ master ]
+    tags: [ 'V*', 'v*' ]
   pull_request:
     branches: [ master ]
 
@@ -46,7 +47,7 @@ jobs:
         overwrite: true
 
     - name: Create Release and Upload Asset
-      if: startsWith(github.ref, 'refs/tags/v')
+      if: startsWith(github.ref, 'refs/tags/V') || startsWith(github.ref, 'refs/tags/v')
       uses: softprops/action-gh-release@v2
       with:
         files: ${{ env.ARTIFACT_PATH }}
