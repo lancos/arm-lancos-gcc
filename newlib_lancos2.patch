@@ -1,0 +1,10 @@
+--- newlib/libc/stdlib/_mallocr.c	2026-01-23 23:12:49.000000000 +0100
++++ newlib/libc/stdlib/lancso-_mallocr.c	2026-08-28 16:42:03.578275353 +0200
+@@ -389,6 +389,7 @@
+ #if DEBUG 
+ #include <assert.h>
+ #else
++#undef assert
+ #define assert(x) ((void)0)
+ #endif
+ 

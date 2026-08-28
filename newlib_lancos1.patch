@@ -1,0 +1,10 @@
+--- newlib/libc/ctype/ctype_.c	2026-01-23 23:12:49.000000000 +0100
++++ newlib/libc/ctype/lanco-ctype_.c	2026-08-28 16:40:31.880308862 +0200
+@@ -149,6 +149,7 @@
+ #endif
+ #if defined(_MB_EXTENDED_CHARSETS_WINDOWS)
+     case 'C':
++      extern int __cp_index (const char *);
+       idx = __cp_index (charset + 2);
+       if (idx < 0)
+         break;

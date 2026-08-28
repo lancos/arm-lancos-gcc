@@ -38,9 +38,9 @@ echo "gcc utilizzato: $CC"
 
 DOWNLOAD_DIR=${CORTEX_TOPDIR}/downloads
 
-BINUTILS_VER=2.46.0
+BINUTILS_VER=2.46.1
 GDB_VER=17.2
-GCC_VER=16.1.0
+GCC_VER=16.2.0
 GMP_VER=6.3.0
 MPFR_VER=4.2.1
 MPC_VER=1.3.1
@@ -54,8 +54,8 @@ EXPAT_VERDIR=R_2_6_4
 #ZLIB_VER=1.2.11
 
 #Aggiungere o meno le librerie per la gestione widechar/multi-byte char
-ENABLE_WCMB=no
-#ENABLE_WCMB=yes
+#ENABLE_WCMB=no
+ENABLE_WCMB=yes
 
 AUTOCONF_VERMIN=2.69
 AUTOCONF_VERSION=`autoconf --version | head -n 1 | cut -d' ' -f4`
@@ -531,6 +531,10 @@ if [ ! -f .newlib ]; then
 	#	patch -p1 < ../newlib_locale.patch
 	#	patch -p1 < ../newlib_locale_lctype.patch
 	#fi
+	if [ "${ENABLE_WCMB}" == "yes" ]; then
+		patch -p0 < ../newlib_lancos1.patch
+		patch -p0 < ../newlib_lancos2.patch
+	fi
 #	patch -p1 < ../newlib_Fix-wrong-path-to-config-default.mh.patch
 	#patch per prototipo settimeofday()
 	patch -p0 < ../newlib_time_h.patch
