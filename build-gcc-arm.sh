@@ -549,7 +549,7 @@ if [ ! -f .newlib ]; then
 
 	# Aggiungere per abilitare supporto alle stringhe multi-byte (wide-char)
 	if [ "${ENABLE_WCMB}" == "yes" ]; then
-		NEWLIB_CONF_PARAM="--enable-newlib-elix-level=2 --enable-newlib-mb --enable-newlib-wide-orient --enable-newlib-iconv --enable-newlib-iconv-external-ccs --enable-newlib-iconv-encodings=iso_8859_1,iso8859_15,cp1252,utf8,big5 "
+		NEWLIB_CONF_PARAM="--enable-newlib-elix-level=2 --enable-newlib-mb --disable-newlib-wide-orient --enable-newlib-iconv --enable-newlib-iconv-encodings=utf8 "
 	else
 		NEWLIB_CONF_PARAM="--enable-newlib-elix-level=2 --disable-newlib-wide-orient "
 	fi
