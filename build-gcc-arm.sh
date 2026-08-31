@@ -587,8 +587,8 @@ if [ ! -f .newlib ]; then
 #Freddie Chopin:
 #- newlib with different configure options (--enable-newlib-register-fini removed, --enable-newlib-io-c99-formats, --disable-newlib-atexit-dynamic-alloc, --enable-newlib-reent-small, --disable-newlib-fvwrite-in-streamio, --disable-newlib-fseek-optimization, --disable-newlib-wide-orient, --disable-newlib-unbuf-stream-opt) 
 #	--enable-lite-exit --disable-newlib-atexit-dynamic-alloc 
-#-D__HAVE_LOCALE_INFO__ -D__HAVE_LOCALE_INFO_EXTENDED__
-	make -j${NUM_JOBS} CFLAGS_FOR_TARGET="-DREENTRANT_SYSCALLS_PROVIDED -DSMALL_MEMORY -DHAVE_ASSERT_FUNC -D__BUFSIZ__=256 -D_MB_EXTENDED_CHARSETS_ALL -ffunction-sections -fdata-sections" 2>&1 | tee make.log
+#-D__HAVE_LOCALE_INFO__ -D__HAVE_LOCALE_INFO_EXTENDED__ -D_MB_EXTENDED_CHARSETS_ALL
+	make -j${NUM_JOBS} CFLAGS_FOR_TARGET="-DREENTRANT_SYSCALLS_PROVIDED -DSMALL_MEMORY -DHAVE_ASSERT_FUNC -D__BUFSIZ__=256 -ffunction-sections -fdata-sections" 2>&1 | tee make.log
 	make install 2>&1 | tee install.log
 	cd ${CORTEX_TOPDIR}
 	touch .newlib
