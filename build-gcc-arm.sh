@@ -38,7 +38,7 @@ echo "gcc utilizzato: $CC"
 
 DOWNLOAD_DIR=${CORTEX_TOPDIR}/downloads
 
-BINUTILS_VER=2.46.1
+BINUTILS_VER=2.47
 GDB_VER=17.2
 GCC_VER=16.2.0
 GMP_VER=6.3.0
@@ -54,8 +54,8 @@ EXPAT_VERDIR=R_2_6_4
 #ZLIB_VER=1.2.11
 
 #Aggiungere o meno le librerie per la gestione widechar/multi-byte char
-#ENABLE_WCMB=no
-ENABLE_WCMB=yes
+ENABLE_WCMB=no
+#ENABLE_WCMB=yes
 
 AUTOCONF_VERMIN=2.69
 AUTOCONF_VERSION=`autoconf --version | head -n 1 | cut -d' ' -f4`
@@ -521,7 +521,6 @@ if [ ! -f .newlib ]; then
 	rm -rf newlib-${NEWLIB_VER}
 	tar xfz ${DOWNLOAD_DIR}/newlib-${NEWLIB_VER}.tar.gz
 #	patch -p0 <newlib_mktime.diff
-#	patch -p0 <newlib_iconv_ccs.patch
 	cd newlib-${NEWLIB_VER}
 	# Le patch stpcpy e fseeko sono necessarie solo in elix=1
 	#if [ "${ENABLE_WCMB}" == "no" ]; then
@@ -547,7 +546,7 @@ if [ ! -f .newlib ]; then
 	mkdir build
 	cd build
 
-	# Aggiungere per abilitare supporto alle stringhe multi-byte (wide-char)
+	# Aggiungere per abilitare supporto alle stringhe multi-byte (UTF-8)
 	if [ "${ENABLE_WCMB}" == "yes" ]; then
 		NEWLIB_CONF_PARAM="--enable-newlib-elix-level=2 --enable-newlib-mb --disable-newlib-wide-orient --enable-newlib-iconv --enable-newlib-iconv-encodings=utf8 "
 	else
