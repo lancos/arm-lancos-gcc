@@ -25,3 +25,5 @@ gdb-*
 .gdb
 .newlib
 .tarxz
+.newlib-nano
+nano-install

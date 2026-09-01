@@ -57,6 +57,16 @@ EXPAT_VERDIR=R_2_6_4
 ENABLE_WCMB=no
 #ENABLE_WCMB=yes
 
+#Costruire anche la variante "nano" di newlib (libc_nano.a & C.), che si
+# seleziona a compile/link time con --specs=nano.specs
+ENABLE_NANO=yes
+#ENABLE_NANO=no
+
+#Multilib per cui installare le librerie nano: "all" oppure un elenco di
+# sottodirectory nel formato di `gcc -print-multi-lib` (es. "thumb/v6-m/nofp"
+# per i soli CortexM0/M0+)
+NANO_MULTILIBS=all
+
 AUTOCONF_VERMIN=2.69
 AUTOCONF_VERSION=`autoconf --version | head -n 1 | cut -d' ' -f4`
 
@@ -80,6 +90,9 @@ fi
 TOOLCHAIN_NAME="gcc${GCC_VER}-bu${BINUTILS_VER}-gdb${GDB_VER}-nl${NEWLIB_VER}-multilib"
 if [ "${ENABLE_WCMB}" == "yes" ]; then
 	TOOLCHAIN_NAME="${TOOLCHAIN_NAME}-wcmb"
+fi
+if [ "${ENABLE_NANO}" == "yes" ]; then
+	TOOLCHAIN_NAME="${TOOLCHAIN_NAME}-nano"
 fi
 
 TOOLCHAINLIB_NAME="gmp${GMP_VER}-mpfr${MPFR_VER}-mpc${MPC_VER}-isl${ISL_VER}-expat${EXPAT_VER}"
@@ -407,6 +420,7 @@ if [ ! -f .binutils ]; then
 		--disable-shared \
 		--enable-interwork \
 		--enable-multilib \
+		--with-sysroot=${TOOLCHAIN_PATH}/${TOOLCHAIN_TARGET} \
 		--with-gnu-as \
 		--with-gnu-ld \
 		--disable-nls \
@@ -417,7 +431,6 @@ if [ ! -f .binutils ]; then
 		--with-isl=${CORTEX_TOPDIR}/static \
 		2>&1 | tee configure.log
 
-#	--with-sysroot=
 #	--enable-plugins --disable-sim --disable-readline --disable-libdecnumber --disable-gdb
 	make -j${NUM_JOBS} all 2>&1 | tee make.log
 	make install 2>&1 | tee install.log
@@ -457,6 +470,7 @@ if [ ! -f .gcc ]; then
 		--enable-languages="c,c++" \
 		--with-newlib \
 		--without-headers \
+		--with-sysroot=${TOOLCHAIN_PATH}/${TOOLCHAIN_TARGET} \
 		--with-gnu-as \
 		--with-gnu-ld \
 		--with-dwarf2 \
@@ -510,6 +524,44 @@ fi
 
 echo "Build NEWLIB"
 cd ${CORTEX_TOPDIR}
+
+# Aggiungere per abilitare supporto alle stringhe multi-byte (UTF-8)
+if [ "${ENABLE_WCMB}" == "yes" ]; then
+	NEWLIB_CONF_PARAM="--enable-newlib-elix-level=2 --enable-newlib-mb --disable-newlib-wide-orient --enable-newlib-iconv --enable-newlib-iconv-encodings=utf8 "
+else
+	NEWLIB_CONF_PARAM="--enable-newlib-elix-level=2 --disable-newlib-wide-orient "
+fi
+
+# Opzioni condivise dalle due varianti di newlib (full e nano): NON devono
+# divergere. I define che finiscono in newlib.h e sono usati dagli header
+# pubblici (_WANT_REENT_SMALL, _RETARGETABLE_LOCKING, _WANT_IO_C99_FORMATS,
+# _MB_CAPABLE, ...) determinano l'ABI, quindi le due librerie restano
+# intercambiabili solo se qui si cambia tutto o niente.
+NEWLIB_COMMON_PARAM="--enable-interwork \
+	--enable-multilib \
+	--enable-newlib-global-atexit \
+	--enable-newlib-reent-small \
+	--enable-newlib-multithread \
+	--enable-newlib-io-c99-formats \
+	--enable-lite-exit \
+	--disable-newlib-supplied-syscalls \
+	--disable-newlib-atexit-dynamic-alloc \
+	--disable-newlib-fvwrite-in-streamio \
+	--disable-newlib-fseek-optimization \
+	--disable-newlib-unbuf-stream-opt \
+	--enable-newlib-retargetable-locking \
+	--disable-shared \
+	--disable-nls \
+	--with-gnu-as \
+	--with-gnu-ld \
+	--enable-lto \
+	${NEWLIB_CONF_PARAM} \
+	--with-gmp=${CORTEX_TOPDIR}/static \
+	--with-mpfr=${CORTEX_TOPDIR}/static \
+	--with-mpc=${CORTEX_TOPDIR}/static"
+
+NEWLIB_CFLAGS_TARGET="-DREENTRANT_SYSCALLS_PROVIDED -DSMALL_MEMORY -DHAVE_ASSERT_FUNC -D__BUFSIZ__=256 -ffunction-sections -fdata-sections"
+
 if [ ! -f .newlib ]; then
 	#rm -rf newlib
 	#mkdir newlib
@@ -546,37 +598,10 @@ if [ ! -f .newlib ]; then
 	mkdir build
 	cd build
 
-	# Aggiungere per abilitare supporto alle stringhe multi-byte (UTF-8)
-	if [ "${ENABLE_WCMB}" == "yes" ]; then
-		NEWLIB_CONF_PARAM="--enable-newlib-elix-level=2 --enable-newlib-mb --disable-newlib-wide-orient --enable-newlib-iconv --enable-newlib-iconv-encodings=utf8 "
-	else
-		NEWLIB_CONF_PARAM="--enable-newlib-elix-level=2 --disable-newlib-wide-orient "
-	fi
 	#note: this needs arm-*-{eabi|elf}-cc to exist or link to arm-*-{eabi|elf}-gcc
 	../configure --target=${TOOLCHAIN_TARGET} --prefix=${TOOLCHAIN_PATH} \
-		--enable-interwork \
-		--enable-multilib \
+		${NEWLIB_COMMON_PARAM} \
 		--enable-newlib-io-float \
-		--enable-newlib-global-atexit \
-		--enable-newlib-reent-small \
-		--enable-newlib-multithread \
-		--enable-newlib-io-c99-formats \
-		--enable-lite-exit \
-		--disable-newlib-supplied-syscalls \
-		--disable-newlib-atexit-dynamic-alloc \
-		--disable-newlib-fvwrite-in-streamio \
-		--disable-newlib-fseek-optimization \
-		--disable-newlib-unbuf-stream-opt \
-		--enable-newlib-retargetable-locking \
-		--disable-shared \
-		--disable-nls \
-		--with-gnu-as \
-		--with-gnu-ld \
-		--enable-lto \
-		${NEWLIB_CONF_PARAM} \
-		--with-gmp=${CORTEX_TOPDIR}/static \
-		--with-mpfr=${CORTEX_TOPDIR}/static \
-		--with-mpc=${CORTEX_TOPDIR}/static \
 		2>&1 | tee configure.log
 
 #	--enable-target-optspace
@@ -587,7 +612,7 @@ if [ ! -f .newlib ]; then
 #- newlib with different configure options (--enable-newlib-register-fini removed, --enable-newlib-io-c99-formats, --disable-newlib-atexit-dynamic-alloc, --enable-newlib-reent-small, --disable-newlib-fvwrite-in-streamio, --disable-newlib-fseek-optimization, --disable-newlib-wide-orient, --disable-newlib-unbuf-stream-opt) 
 #	--enable-lite-exit --disable-newlib-atexit-dynamic-alloc 
 #-D__HAVE_LOCALE_INFO__ -D__HAVE_LOCALE_INFO_EXTENDED__ -D_MB_EXTENDED_CHARSETS_ALL
-	make -j${NUM_JOBS} CFLAGS_FOR_TARGET="-DREENTRANT_SYSCALLS_PROVIDED -DSMALL_MEMORY -DHAVE_ASSERT_FUNC -D__BUFSIZ__=256 -ffunction-sections -fdata-sections" 2>&1 | tee make.log
+	make -j${NUM_JOBS} CFLAGS_FOR_TARGET="${NEWLIB_CFLAGS_TARGET}" 2>&1 | tee make.log
 	make install 2>&1 | tee install.log
 	cd ${CORTEX_TOPDIR}
 	touch .newlib
@@ -601,6 +626,87 @@ if [ ! -f .gcc-full ]; then
 	make install-strip 2>&1 | tee install-full.log
 	cd ${CORTEX_TOPDIR}
 	touch .gcc-full
+fi
+
+# La variante "nano" e` una seconda compilazione degli stessi sorgenti newlib
+# con l'allocatore e le printf/scanf compatte. Le librerie risultanti vengono
+# affiancate a quelle full nelle stesse directory multilib con il suffisso
+# _nano, che e` quello che si aspetta nano.specs (installata da libgloss).
+# Le multilib di GCC non raddoppiano: libgcc e` la stessa per le due varianti.
+echo "Build NEWLIB-NANO"
+cd ${CORTEX_TOPDIR}
+if [ "${ENABLE_NANO}" == "yes" ] && [ ! -f .newlib-nano ]; then
+	NANO_INSTALL=${CORTEX_TOPDIR}/nano-install
+	rm -rf ${NANO_INSTALL}
+	cd newlib-${NEWLIB_VER}
+	rm -rf build-nano
+	mkdir build-nano
+	cd build-nano
+
+	# Rispetto alla newlib full cambiano solo tre cose:
+	# - nano-malloc: allocatore compatto (su v6-m ~2.3KB di flash e ~1KB di
+	#   RAM in meno rispetto a dlmalloc)
+	# - nano-formatted-io: printf/scanf ridotte. Attenzione: perdono %ll,
+	#   %z, %j, %t, long double e argomenti posizionali (nano-vfprintf_local.h
+	#   fa #undef _WANT_IO_C99_FORMATS e #define _NO_LONGLONG)
+	# - niente io-float: il supporto float nelle printf/scanf si tira dentro
+	#   a link time con -u _printf_float / -u _scanf_float
+	# Nessuna delle tre e` visibile dagli header pubblici (_NANO_MALLOC e
+	# _NANO_FORMATTED_IO compaiono solo in newlib.h e in _mallocr.c), percio`
+	# la libc nano resta ABI-compatibile con quella full e con libstdc++.
+	../configure --target=${TOOLCHAIN_TARGET} --prefix=${NANO_INSTALL} \
+		${NEWLIB_COMMON_PARAM} \
+		--enable-newlib-nano-malloc \
+		--enable-newlib-nano-formatted-io \
+		2>&1 | tee configure.log
+
+	make -j${NUM_JOBS} CFLAGS_FOR_TARGET="${NEWLIB_CFLAGS_TARGET}" 2>&1 | tee make.log
+	make install 2>&1 | tee install.log
+	cd ${CORTEX_TOPDIR}
+
+	# newlib.h della variante nano: nano.specs lo antepone agli include con
+	# -isystem =/include/newlib-nano (il "=" e` il sysroot del toolchain)
+	NANO_INCDIR=${TOOLCHAIN_PATH}/${TOOLCHAIN_TARGET}/include/newlib-nano
+	mkdir -p ${NANO_INCDIR}
+	cp -f ${NANO_INSTALL}/${TOOLCHAIN_TARGET}/include/newlib.h ${NANO_INCDIR}/
+
+	if [ "${NANO_MULTILIBS}" == "all" ]; then
+		MULTILIB_DIRS=`${TOOLCHAIN_TARGET}-gcc -print-multi-lib | cut -d';' -f1`
+	else
+		MULTILIB_DIRS="${NANO_MULTILIBS}"
+	fi
+
+	for MLDIR in ${MULTILIB_DIRS}; do
+		NANO_LIBDIR=${NANO_INSTALL}/${TOOLCHAIN_TARGET}/lib/${MLDIR}
+		FULL_LIBDIR=${TOOLCHAIN_PATH}/${TOOLCHAIN_TARGET}/lib/${MLDIR}
+		if [ ! -d ${NANO_LIBDIR} -o ! -d ${FULL_LIBDIR} ]; then
+			echo "!  multilib ${MLDIR} inesistente, controllare NANO_MULTILIBS"
+			exit 1
+		fi
+		echo "Install newlib-nano per multilib ${MLDIR}"
+		for LIB in libc libm librdimon; do
+			if [ -f ${NANO_LIBDIR}/${LIB}.a ]; then
+				cp -f ${NANO_LIBDIR}/${LIB}.a ${FULL_LIBDIR}/${LIB}_nano.a
+			fi
+		done
+		#newlib installa libg.a come hardlink di libc.a, facciamo lo stesso
+		if [ -f ${FULL_LIBDIR}/libc_nano.a ]; then
+			ln -f ${FULL_LIBDIR}/libc_nano.a ${FULL_LIBDIR}/libg_nano.a
+		fi
+
+		# nano.specs rimappa anche -lstdc++/-lsupc++, quindi senza una
+		# libstdc++ nano un link C++ con --specs=nano.specs fallirebbe.
+		# Gli header delle due newlib sono identici e le librerie full sono
+		# ABI-compatibili: bastano come fallback finche` non serve davvero
+		# una libstdc++ compilata a parte (-Os, --disable-libstdcxx-verbose).
+		for LIB in libstdc++ libsupc++; do
+			if [ -f ${FULL_LIBDIR}/${LIB}.a ]; then
+				ln -snf ${LIB}.a ${FULL_LIBDIR}/${LIB}_nano.a
+			fi
+		done
+	done
+	cd ${CORTEX_TOPDIR}
+	touch .newlib-nano
 fi
 
 echo "Build GDB"
